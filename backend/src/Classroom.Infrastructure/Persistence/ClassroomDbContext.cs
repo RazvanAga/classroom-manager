@@ -1,3 +1,4 @@
+using Classroom.Domain.Classes;
 using Classroom.Domain.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -12,10 +13,14 @@ namespace Classroom.Infrastructure.Persistence;
 public class ClassroomDbContext(DbContextOptions<ClassroomDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<Class> Classes => Set<Class>();
+    public DbSet<ClassTeacher> ClassTeachers => Set<ClassTeacher>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        // Future feature slices configure their entities here / in IEntityTypeConfiguration types.
+        // Feature slices configure their entities via IEntityTypeConfiguration in this assembly.
+        builder.ApplyConfigurationsFromAssembly(typeof(ClassroomDbContext).Assembly);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

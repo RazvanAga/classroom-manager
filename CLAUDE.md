@@ -39,7 +39,7 @@ These are the load-bearing, easy-to-get-wrong decisions:
 - **Authorization is resource-based handlers** (class membership + Owner for destructive ops). A teacher must never access a class they're not in — cover cross-tenant denial with integration tests.
 - **Kiosk mode = a separate reduced-scope principal** (`{mode:kiosk, classId}`), not hidden UI. The server must reject teacher/admin endpoints for the kiosk principal. PIN to exit.
 - **GUID v7 primary keys** (`Guid.CreateVersion7()`).
-- **Soft-delete via an EF global query filter** on `DeletedAt`/`IsArchived` — this is the *only* place a global query filter is used (authz is handlers, not filters).
+- **Soft-delete via an EF global query filter** on `DeletedAt` — this is the *only* place a global query filter is used (authz is handlers, not filters). `IsArchived` is a separate lifecycle flag handled as an ordinary query predicate (archived rows stay queryable so history is retained), **not** part of the global filter.
 - **Avatars: one locked DiceBear style.** A store item = one option value for a slot; the frontend composes/renders. No cross-style mixing; no render metadata stored.
 - **Enums stored as strings** (EF conversion). Timestamps UTC; reports bucket by the teacher's local day.
 - **DataProtection keys persist to a mounted volume** (deploy slice) so cookies/antiforgery survive redeploys.

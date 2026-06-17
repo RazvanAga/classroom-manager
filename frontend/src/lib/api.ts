@@ -42,3 +42,34 @@ export async function logout(): Promise<void> {
   });
   if (!res.ok) throw new Error("Logout failed.");
 }
+
+export type ClassRole = "Owner" | "Collaborator";
+
+export type ClassSummary = {
+  id: string;
+  name: string;
+  createdAt: string;
+  isArchived: boolean;
+  role: ClassRole;
+};
+
+export async function fetchClasses(): Promise<ClassSummary[]> {
+  const res = await fetch("/api/classes", { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to load classes.");
+  return res.json();
+}
+
+export async function createClass(name: string): Promise<ClassSummary> {
+  const token = await antiforgeryToken();
+  const res = await fetch("/api/classes", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const problem: ProblemDetails | null = await res.json().catch(() => null);
+    throw new Error(problem?.detail ?? problem?.title ?? "Could not create the class.");
+  }
+  return res.json();
+}

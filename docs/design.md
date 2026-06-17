@@ -209,7 +209,7 @@ Format: each decision states the **choice**, the **reasoning**, and the **reject
 ## 7. Data lifecycle
 
 ### 7.1 Soft-delete + minimal PII + a real purge path
-**Choice.** Students and classes carry `DeletedAt`/`IsArchived` (soft delete via an **EF global query filter** — the one place a query filter is used). Store **minimal PII** (display/first name only; no student emails or DOB). Provide an explicit **hard-purge** that **anonymizes** (not orphans) ledger rows for genuine erasure.
+**Choice.** Students and classes carry `DeletedAt` and `IsArchived`. **Soft delete** (`DeletedAt`) is enforced by an **EF global query filter** — the one place a query filter is used; deleted rows vanish everywhere. **Archive** (`IsArchived`) is a *distinct, lighter* lifecycle state handled as an **ordinary query predicate** (the active list excludes archived classes, but they stay queryable so year-end history is retained and a future "archived" view can show them) — deliberately **not** in the global filter, since archiving must not hide history the way deletion does. Archiving is a membership-level op; only deletion is Owner-gated. Store **minimal PII** (display/first name only; no student emails or DOB). Provide an explicit **hard-purge** that **anonymizes** (not orphans) ledger rows for genuine erasure.
 
 **Reasoning.** Removing a student preserves ledger integrity and allows undo; classes archive at year-end without cascading away history; the small PII surface and a real erasure path are a defensible "I thought about minors' data" story.
 
