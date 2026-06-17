@@ -16,7 +16,7 @@ If a decision in code conflicts with these docs, stop and reconcile rather than 
 
 ## Status
 
-Greenfield / design complete. No application code yet. Implementation starts with the walking skeleton — **issue #2** (nothing blocks it). Build in dependency order; respect each ticket's `Blocked by`.
+Issues **#2–#4 complete** (walking skeleton, classes + authz, roster). Next in dependency order: **#5 — Behavior catalog + default seeding**. Build in dependency order; respect each ticket's `Blocked by` (see docs/issues/README.md).
 
 ## Workflow conventions
 
@@ -49,6 +49,12 @@ These are the load-bearing, easy-to-get-wrong decisions:
 Two seams. Assert external behavior, not internals.
 1. **Integration** — drive real endpoints via `WebApplicationFactory` against real Postgres (Testcontainers), running real migrations. Primary seam for feature behavior, authz, EF mapping. The harness from #2 is the reference pattern later slices copy.
 2. **Unit** — pure domain functions, no DB: group formation (size/even/gender-balance), fair-pick cycle, ledger aggregation, purchase affordability, roster paste parser.
+
+**Local dev gotchas:**
+- There is **no `.sln`** — run tests per-project: `dotnet test backend/tests/Classroom.UnitTests/Classroom.UnitTests.csproj` (and the IntegrationTests csproj).
+- **Docker Desktop must be running** before integration tests — Testcontainers needs it, or every integration test fails with a misleading Docker-connection error.
+- **Migrations:** the API doesn't reference `EFCore.Design`, so use Infrastructure as its own startup project: `dotnet ef migrations add <Name> --project backend/src/Classroom.Infrastructure --startup-project backend/src/Classroom.Infrastructure` (a `DesignTimeDbContextFactory` supplies the connection string).
+- **New FluentValidation validators are auto-discovered** via the assembly scan in Program.cs — no manual registration.
 
 ## Notes
 
