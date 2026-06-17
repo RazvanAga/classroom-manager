@@ -134,3 +134,62 @@ export async function removeStudent(classId: string, studentId: string): Promise
   });
   if (!res.ok) throw new Error(await problemMessage(res, "Could not remove the student."));
 }
+
+// --- Behaviors ---
+
+export type Behavior = {
+  id: string;
+  classId: string;
+  name: string;
+  defaultPoints: number;
+  createdAt: string;
+};
+
+export async function fetchBehaviors(classId: string): Promise<Behavior[]> {
+  const res = await fetch(`/api/classes/${classId}/behaviors`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to load the behavior catalog.");
+  return res.json();
+}
+
+export async function addBehavior(
+  classId: string,
+  name: string,
+  defaultPoints: number,
+): Promise<Behavior> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/behaviors`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ name, defaultPoints }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not add the behavior."));
+  return res.json();
+}
+
+export async function updateBehavior(
+  classId: string,
+  behaviorId: string,
+  name: string,
+  defaultPoints: number,
+): Promise<Behavior> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/behaviors/${behaviorId}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ name, defaultPoints }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not update the behavior."));
+  return res.json();
+}
+
+export async function removeBehavior(classId: string, behaviorId: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/behaviors/${behaviorId}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: { "X-XSRF-TOKEN": token },
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not remove the behavior."));
+}

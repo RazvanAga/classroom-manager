@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Classroom.Api.Common.Authorization;
 using Classroom.Api.Common.Security;
 using Classroom.Api.Common.Validation;
+using Classroom.Domain.Behaviors;
 using Classroom.Domain.Classes;
 using Classroom.Domain.Identity;
 using Classroom.Infrastructure.Persistence;
@@ -61,6 +62,9 @@ public static class ClassesEndpoints
         newClass.Teachers.Add(new ClassTeacher { TeacherId = teacherId, Role = ClassRole.Owner });
 
         db.Classes.Add(newClass);
+        // Seed the default behavior catalog by copying the code template into per-class rows
+        // (design.md §2.3), so the class is awardable immediately. Saved in the same transaction.
+        db.Behaviors.AddRange(DefaultBehaviors.CreateFor(newClass.Id));
         await db.SaveChangesAsync();
 
         var response = ToResponse(newClass, ClassRole.Owner);

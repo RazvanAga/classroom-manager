@@ -1,3 +1,4 @@
+using Classroom.Domain.Behaviors;
 using Classroom.Domain.Classes;
 using Classroom.Domain.Identity;
 using Classroom.Domain.Students;
@@ -17,6 +18,7 @@ public class ClassroomDbContext(DbContextOptions<ClassroomDbContext> options)
     public DbSet<Class> Classes => Set<Class>();
     public DbSet<ClassTeacher> ClassTeachers => Set<ClassTeacher>();
     public DbSet<Student> Students => Set<Student>();
+    public DbSet<Behavior> Behaviors => Set<Behavior>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

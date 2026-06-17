@@ -71,13 +71,14 @@ public class RosterEndpointsTests(ClassroomApiFactory factory) : IntegrationTest
             $"/api/classes/{classId}/students/bulk", new { text });
         bulk.EnsureSuccessStatusCode();
 
-        var roster = (await ListStudentsAsync(client, classId)).OrderBy(s => s.CreatedAt).ToList();
+        // Bulk-inserted rows share a CreatedAt instant, so assert by name rather than by order.
+        var roster = await ListStudentsAsync(client, classId);
         Assert.Equal(4, roster.Count);
-        Assert.Equal(("Alice", "Female"), (roster[0].DisplayName, roster[0].Gender));
-        Assert.Equal(("Bob", "Male"), (roster[1].DisplayName, roster[1].Gender));
-        Assert.Equal(("Charlie", (string?)null), (roster[2].DisplayName, roster[2].Gender));
+        Assert.Equal("Female", Assert.Single(roster, s => s.DisplayName == "Alice").Gender);
+        Assert.Equal("Male", Assert.Single(roster, s => s.DisplayName == "Bob").Gender);
+        Assert.Null(Assert.Single(roster, s => s.DisplayName == "Charlie").Gender);
         // Unrecognized marker keeps the student with no gender (tolerant parser).
-        Assert.Equal(("Dana", (string?)null), (roster[3].DisplayName, roster[3].Gender));
+        Assert.Null(Assert.Single(roster, s => s.DisplayName == "Dana").Gender);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using Classroom.Api.Common.Authorization;
 using Classroom.Api.Features.Auth;
+using Classroom.Api.Features.Behaviors;
 using Classroom.Api.Features.Classes;
 using Classroom.Api.Features.Roster;
 using Classroom.Api.Identity;
@@ -70,6 +71,7 @@ app.MapGet("/api/antiforgery/token", (IAntiforgery antiforgery, HttpContext cont
 app.MapAuthEndpoints();
 app.MapClassEndpoints();
 app.MapRosterEndpoints();
+app.MapBehaviorEndpoints();
 
 // Local-dev convenience: apply migrations and seed the teacher on boot. In production,
 // migrations run as an explicit bundle deploy step (design.md §8.3, slice #17).
