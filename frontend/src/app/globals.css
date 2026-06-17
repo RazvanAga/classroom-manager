@@ -1,0 +1,118 @@
+:root {
+  --bg: #f5f3ff;
+  --surface: #ffffff;
+  --ink: #1e1b2e;
+  --muted: #6b6580;
+  --accent: #7c5cff;
+  --accent-ink: #ffffff;
+  --danger: #d6455d;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(60, 40, 120, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: radial-gradient(1200px 600px at 50% -10%, #ede9fe, var(--bg));
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.card h1 {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 14px 0 6px;
+}
+
+input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid #e3def5;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #faf9ff;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  border-color: transparent;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 12px 16px;
+}
+
+.btn-primary {
+  width: 100%;
+  margin-top: 22px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--accent);
+  padding: 8px 12px;
+}
+
+.error {
+  margin-top: 16px;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.greeting {
+  text-align: center;
+}
+
+.greeting .name {
+  color: var(--accent);
+  font-weight: 700;
+}

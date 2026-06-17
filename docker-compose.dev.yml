@@ -1,0 +1,22 @@
+# Local development database only. The API and frontend run on the host (dotnet run / npm run
+# dev). The production stack (Nginx + API + Postgres) is defined in the deployment slice (#17).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: classroom-dev-db
+    environment:
+      POSTGRES_USER: classroom
+      POSTGRES_PASSWORD: classroom
+      POSTGRES_DB: classroom
+    ports:
+      - "5432:5432"
+    volumes:
+      - classroom-dev-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U classroom -d classroom"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  classroom-dev-db:

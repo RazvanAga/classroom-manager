@@ -54,7 +54,76 @@ Work is broken into vertical "tracer-bullet" slices, each demoable on its own. I
 
 ## Local development
 
-> Setup instructions (prerequisites, running the API + frontend + Postgres locally, running the tests) will be added with the [walking-skeleton slice (#2)](https://github.com/RazvanAga/classroom-manager/issues/2), where the project scaffolding and run commands are established.
+### Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Node.js 22+](https://nodejs.org/)
+- [Docker](https://www.docker.com/) (for the local Postgres and for the Testcontainers integration tests)
+
+### Layout
+
+```
+backend/
+  src/Classroom.Domain          # entities + pure domain logic
+  src/Classroom.Infrastructure  # EF Core + PostgreSQL, migrations
+  src/Classroom.Api             # Minimal API host, vertical feature slices
+  tests/Classroom.UnitTests          # pure-domain, no DB
+  tests/Classroom.IntegrationTests   # WebApplicationFactory + Testcontainers Postgres
+frontend/                       # Next.js (App Router + TS), static export
+docker-compose.dev.yml          # local Postgres only
+```
+
+### Run it
+
+```bash
+# 1. Start Postgres (localhost:5432, db/user/password all "classroom")
+docker compose -f docker-compose.dev.yml up -d
+
+# 2. Run the API on http://localhost:5080
+#    Applies EF migrations and seeds the demo teacher on first boot (Development only).
+dotnet run --project backend/src/Classroom.Api
+
+# 3. In another terminal, run the frontend on http://localhost:3000
+#    (the dev server proxies /api to the API so cookies stay same-origin)
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:3000 and sign in with the seeded teacher:
+
+| Field | Value |
+|-------|-------|
+| Email | `teacher@classroom.local` |
+| Password | `Passw0rd!` |
+
+The seed credentials live in [`appsettings.json`](backend/src/Classroom.Api/appsettings.json) under `SeedTeacher`; override the password locally with [user secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) (`dotnet user-secrets set "SeedTeacher:Password" "…"`) for anything you don't want in source control.
+
+- **API docs (Scalar):** http://localhost:5080/scalar/v1
+- **OpenAPI document:** http://localhost:5080/openapi/v1.json
+
+### Tests
+
+```bash
+# Both seams (unit + Testcontainers integration). Docker must be running for the integration tests.
+dotnet test
+
+# Just the fast, no-DB unit tests:
+dotnet test backend/tests/Classroom.UnitTests
+```
+
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs both seams plus the frontend static-export build on every push.
+
+### Migrations
+
+```bash
+dotnet ef migrations add <Name> \
+  --project backend/src/Classroom.Infrastructure \
+  --startup-project backend/src/Classroom.Infrastructure \
+  --output-dir Persistence/Migrations
+```
+
+In Development the API applies migrations on startup. Production applies them as an explicit migration-bundle deploy step (slice #17) — never auto-on-startup.
 
 ## License
 

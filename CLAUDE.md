@@ -21,7 +21,7 @@ Greenfield / design complete. No application code yet. Implementation starts wit
 ## Workflow conventions
 
 - **One vertical slice at a time.** Each issue cuts end-to-end (schema → API → UI → tests) and must be demoable/verifiable on its own.
-- **Commit on completion of each issue** with a descriptive message (the issue title is acceptable). Branch off `main`; don't commit directly to `main` unless asked.
+- **Commit on completion of each issue** with a descriptive message (the issue title is acceptable). **Work directly on `main` — do not create feature branches.** Commit straight to `main`.
 - **Issues #2–#16 are AFK** (agent-implementable); **#17 (deploy) and #18 (backups) are HITL** — don't attempt the Hetzner deploy autonomously; deployment is deliberately deferred until the app is production-ready.
 - Keep the three docs above in sync when scope changes.
 
