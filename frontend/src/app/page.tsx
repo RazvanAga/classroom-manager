@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createClass, fetchClasses, fetchMe, logout } from "@/lib/api";
 import { RosterPanel } from "./RosterPanel";
 import { BehaviorPanel } from "./BehaviorPanel";
+import { PointsPanel } from "./PointsPanel";
 
 export default function HomePage() {
   const router = useRouter();
@@ -122,6 +123,7 @@ export default function HomePage() {
 
         {selected && <RosterPanel klass={selected} />}
         {selected && <BehaviorPanel classId={selected.id} />}
+        {selected && <PointsPanel classId={selected.id} />}
       </div>
     </main>
   );

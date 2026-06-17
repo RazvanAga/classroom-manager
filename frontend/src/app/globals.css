@@ -282,3 +282,73 @@ button {
   color: var(--danger);
   background: #fce4e9;
 }
+
+.points-tag.wallet {
+  color: var(--accent);
+  background: #ede9fe;
+}
+
+.points-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.selected-count {
+  margin: 0;
+}
+
+.pick-box {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.award-hint {
+  margin: 16px 0 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.behavior-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  background: #e4f6ec;
+  color: #2f8f57;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border-radius: 999px;
+}
+
+.chip.negative {
+  background: #fce4e9;
+  color: var(--danger);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.chip-points {
+  font-weight: 700;
+}
+
+.leaderboard-title {
+  margin: 24px 0 0;
+  font-size: 1rem;
+}
+
+.leaderboard {
+  counter-reset: rank;
+}
+
+.rank {
+  color: var(--muted);
+  font-weight: 700;
+}

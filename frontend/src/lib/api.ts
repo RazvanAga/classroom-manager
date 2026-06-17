@@ -193,3 +193,37 @@ export async function removeBehavior(classId: string, behaviorId: string): Promi
   });
   if (!res.ok) throw new Error(await problemMessage(res, "Could not remove the behavior."));
 }
+
+// --- Points ---
+
+export type Balance = { studentId: string; wallet: number; lifetimeEarned: number };
+
+export type LeaderboardEntry = {
+  studentId: string;
+  displayName: string;
+  wallet: number;
+  lifetimeEarned: number;
+};
+
+// Award (or deduct) a behavior to one or many students. The selected behavior's signed default
+// points decide the amount; selecting several students writes one row each sharing a batch id.
+export async function awardBehavior(
+  classId: string,
+  studentIds: string[],
+  behaviorId: string,
+): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/points/award`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ studentIds, behaviorId }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not award points."));
+}
+
+export async function fetchLeaderboard(classId: string): Promise<LeaderboardEntry[]> {
+  const res = await fetch(`/api/classes/${classId}/leaderboard`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to load the leaderboard.");
+  return res.json();
+}

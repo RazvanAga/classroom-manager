@@ -1,6 +1,7 @@
 using Classroom.Domain.Behaviors;
 using Classroom.Domain.Classes;
 using Classroom.Domain.Identity;
+using Classroom.Domain.Points;
 using Classroom.Domain.Students;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -19,6 +20,7 @@ public class ClassroomDbContext(DbContextOptions<ClassroomDbContext> options)
     public DbSet<ClassTeacher> ClassTeachers => Set<ClassTeacher>();
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Behavior> Behaviors => Set<Behavior>();
+    public DbSet<PointTransaction> PointTransactions => Set<PointTransaction>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
