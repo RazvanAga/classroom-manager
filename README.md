@@ -75,6 +75,15 @@ docker-compose.dev.yml          # local Postgres only
 
 ### Run it
 
+The fastest way (Windows / PowerShell) — one script starts Postgres, the API, and the frontend, then opens the browser:
+
+```powershell
+./dev.ps1            # start everything
+./dev.ps1 -StopDb    # stop the database (close the two windows to stop the servers)
+```
+
+Or run the three pieces manually:
+
 ```bash
 # 1. Start Postgres (localhost:5432, db/user/password all "classroom")
 docker compose -f docker-compose.dev.yml up -d
