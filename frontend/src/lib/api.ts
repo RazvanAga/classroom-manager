@@ -73,3 +73,64 @@ export async function createClass(name: string): Promise<ClassSummary> {
   }
   return res.json();
 }
+
+// --- Roster ---
+
+export type Gender = "Female" | "Male";
+
+export type Student = {
+  id: string;
+  classId: string;
+  displayName: string;
+  gender: Gender | null;
+  createdAt: string;
+};
+
+async function problemMessage(res: Response, fallback: string): Promise<string> {
+  const problem: ProblemDetails | null = await res.json().catch(() => null);
+  return problem?.detail ?? problem?.title ?? fallback;
+}
+
+export async function fetchStudents(classId: string): Promise<Student[]> {
+  const res = await fetch(`/api/classes/${classId}/students`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to load the roster.");
+  return res.json();
+}
+
+export async function addStudent(
+  classId: string,
+  displayName: string,
+  gender: Gender | null,
+): Promise<Student> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/students`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ displayName, gender }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not add the student."));
+  return res.json();
+}
+
+export async function bulkAddStudents(classId: string, text: string): Promise<Student[]> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/students/bulk`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not add the students."));
+  return res.json();
+}
+
+export async function removeStudent(classId: string, studentId: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/students/${studentId}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: { "X-XSRF-TOKEN": token },
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not remove the student."));
+}

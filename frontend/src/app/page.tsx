@@ -4,11 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClass, fetchClasses, fetchMe, logout } from "@/lib/api";
+import { RosterPanel } from "./RosterPanel";
 
 export default function HomePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data: me, isLoading } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
 
@@ -17,6 +19,8 @@ export default function HomePage() {
     queryFn: fetchClasses,
     enabled: !!me,
   });
+
+  const selected = classes?.find((c) => c.id === selectedId) ?? null;
 
   const logoutMutation = useMutation({
     mutationFn: logout,
@@ -93,7 +97,19 @@ export default function HomePage() {
         {classes && classes.length > 0 ? (
           <ul className="class-list">
             {classes.map((c) => (
-              <li key={c.id} className="class-item">
+              <li
+                key={c.id}
+                className={`class-item selectable${c.id === selectedId ? " selected" : ""}`}
+                onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedId(c.id === selectedId ? null : c.id);
+                  }
+                }}
+              >
                 <span className="class-name">{c.name}</span>
                 <span className="role-tag">{c.role}</span>
               </li>
@@ -102,6 +118,8 @@ export default function HomePage() {
         ) : (
           <p className="empty">No classes yet — create your first one above.</p>
         )}
+
+        {selected && <RosterPanel klass={selected} />}
       </div>
     </main>
   );

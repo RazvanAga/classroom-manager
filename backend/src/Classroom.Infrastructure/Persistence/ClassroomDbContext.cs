@@ -1,5 +1,6 @@
 using Classroom.Domain.Classes;
 using Classroom.Domain.Identity;
+using Classroom.Domain.Students;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ public class ClassroomDbContext(DbContextOptions<ClassroomDbContext> options)
 {
     public DbSet<Class> Classes => Set<Class>();
     public DbSet<ClassTeacher> ClassTeachers => Set<ClassTeacher>();
+    public DbSet<Student> Students => Set<Student>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

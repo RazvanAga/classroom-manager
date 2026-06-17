@@ -184,3 +184,75 @@ button {
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+.class-item.selectable {
+  cursor: pointer;
+}
+
+.class-item.selectable:hover {
+  border-color: var(--accent);
+}
+
+.class-item.selected {
+  border-color: var(--accent);
+  background: #ede9fe;
+}
+
+.roster {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e3def5;
+}
+
+.roster h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+
+.gender-select {
+  flex: 0 0 auto;
+  padding: 11px 10px;
+  border: 1px solid #e3def5;
+  border-radius: 12px;
+  background: #faf9ff;
+  font-size: 1rem;
+}
+
+.paste-block {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paste-block textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid #e3def5;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #faf9ff;
+  resize: vertical;
+}
+
+.paste-block textarea:focus {
+  outline: 2px solid var(--accent);
+  border-color: transparent;
+}
+
+.paste-block .btn-primary.inline {
+  align-self: flex-start;
+}
+
+.roster-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-ghost.danger {
+  color: var(--danger);
+  font-size: 0.85rem;
+  padding: 6px 10px;
+}
