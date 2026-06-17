@@ -16,7 +16,7 @@ If a decision in code conflicts with these docs, stop and reconcile rather than 
 
 ## Status
 
-Issues **#2–#4 complete** (walking skeleton, classes + authz, roster). Next in dependency order: **#5 — Behavior catalog + default seeding**. Build in dependency order; respect each ticket's `Blocked by` (see docs/issues/README.md).
+Issues **#2–#5 complete** (walking skeleton, classes + authz, roster, behavior catalog). Next in dependency order: **#6 — Points ledger + wallet/lifetime + leaderboard** (now unblocked: needs #4 + #5). Build in dependency order; respect each ticket's `Blocked by` (see docs/issues/README.md).
 
 ## Workflow conventions
 
