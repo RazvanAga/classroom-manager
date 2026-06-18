@@ -15,9 +15,9 @@ Scope:
 
 ## Acceptance criteria
 
-- [ ] The timer counts down from a chosen or preset duration.
-- [ ] Start, pause, and reset all work.
-- [ ] A clear visual (and optional sound) alert fires at zero.
+- [x] The timer counts down from a chosen or preset duration.
+- [x] Start, pause, and reset all work.
+- [x] A clear visual (and optional sound) alert fires at zero.
 
 ## Blocked by
 

@@ -676,3 +676,78 @@ button {
   border-radius: 999px;
   padding: 1px 6px;
 }
+
+/* --- Activity timer (design.md §6.1) --- */
+.timer-display {
+  margin: 8px 0 14px;
+  padding: 18px;
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  background: #faf9ff;
+  border: 1px solid #e3def5;
+  border-radius: 14px;
+}
+
+.timer-display.finished {
+  color: var(--danger);
+  background: #fce4e9;
+  border-color: #f6c7d1;
+  animation: timer-flash 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes timer-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+.timer-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip.timer-preset {
+  background: #ede9fe;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.timer-custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.timer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.timer-sound {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 400;
+}

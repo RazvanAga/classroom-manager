@@ -16,6 +16,7 @@ import { BehaviorPanel } from "./BehaviorPanel";
 import { PointsPanel } from "./PointsPanel";
 import { PickerPanel } from "./PickerPanel";
 import { GroupsPanel } from "./GroupsPanel";
+import { TimerPanel } from "./TimerPanel";
 import { KioskView } from "./KioskView";
 
 export default function HomePage() {
@@ -172,6 +173,7 @@ export default function HomePage() {
         {selected && <PointsPanel classId={selected.id} />}
         {selected && <PickerPanel classId={selected.id} />}
         {selected && <GroupsPanel classId={selected.id} />}
+        {selected && <TimerPanel />}
       </div>
     </main>
   );
