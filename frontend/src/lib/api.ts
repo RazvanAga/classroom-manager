@@ -270,3 +270,59 @@ export async function voidBatch(classId: string, batchId: string): Promise<void>
   });
   if (!res.ok) throw new Error(await problemMessage(res, "Could not undo the bulk award."));
 }
+
+// --- Avatars ---
+
+// The always-on layers of the locked DiceBear style (mirrors the backend AvatarSlot enum).
+export type AvatarSlot = "Hair" | "HairColor" | "SkinColor" | "Eyes" | "Mouth";
+export type AvatarRarity = "Common" | "Rare" | "Epic" | "Legendary";
+
+export type AvatarItem = {
+  id: string;
+  slot: AvatarSlot;
+  optionValue: string;
+  displayName: string;
+  cost: number;
+  rarity: AvatarRarity | null;
+  isDefault: boolean;
+};
+
+export type EquippedSlot = { slot: AvatarSlot; itemId: string; optionValue: string };
+
+export type StudentAvatar = {
+  studentId: string;
+  style: string;
+  equipped: EquippedSlot[];
+  owned: AvatarItem[];
+};
+
+export async function fetchStudentAvatar(
+  classId: string,
+  studentId: string,
+): Promise<StudentAvatar> {
+  const res = await fetch(`/api/classes/${classId}/students/${studentId}/avatar`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Failed to load the avatar.");
+  return res.json();
+}
+
+// Equip an option the student already owns in a slot. Free; switching is unrestricted.
+export async function equipItem(
+  classId: string,
+  studentId: string,
+  slot: AvatarSlot,
+  itemId: string,
+): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(
+    `/api/classes/${classId}/students/${studentId}/avatar/${slot}`,
+    {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+      body: JSON.stringify({ itemId }),
+    },
+  );
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not equip the option."));
+}

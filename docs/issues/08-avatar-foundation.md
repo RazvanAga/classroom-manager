@@ -17,11 +17,11 @@ Scope:
 
 ## Acceptance criteria
 
-- [ ] Catalog is seeded from the chosen style's options, with free default items flagged.
-- [ ] New students own the default items and render a valid avatar.
-- [ ] A student can equip any owned option per slot (free) and switch freely.
-- [ ] The avatar renders in the roster from the equipped configuration.
-- [ ] Authorization enforced.
+- [x] Catalog is seeded from the chosen style's options, with free default items flagged.
+- [x] New students own the default items and render a valid avatar.
+- [x] A student can equip any owned option per slot (free) and switch freely.
+- [x] The avatar renders in the roster from the equipped configuration.
+- [x] Authorization enforced.
 
 ## Blocked by
 

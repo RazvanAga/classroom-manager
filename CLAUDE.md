@@ -16,7 +16,7 @@ If a decision in code conflicts with these docs, stop and reconcile rather than 
 
 ## Status
 
-Issues **#2–#7 complete** (walking skeleton, classes + authz, roster, behavior catalog, points ledger + wallet/lifetime + leaderboard, undo via soft-void). Next in dependency order: **#8 — Avatar foundation (DiceBear + defaults + equip)** (needs #4). #9 (store + transactional purchase) needs #6 + #8. Build in dependency order; respect each ticket's `Blocked by` (see docs/issues/README.md).
+Issues **#2–#8 complete** (walking skeleton, classes + authz, roster, behavior catalog, points ledger + wallet/lifetime + leaderboard, undo via soft-void, avatar foundation: global DiceBear `adventurer` catalog + free defaults granted on student creation + free equip). Next in dependency order: **#9 — Store + transactional purchase** (needs #6 + #8). Build in dependency order; respect each ticket's `Blocked by` (see docs/issues/README.md).
 
 ## Workflow conventions
 

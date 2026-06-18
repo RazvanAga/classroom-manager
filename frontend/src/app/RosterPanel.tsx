@@ -10,6 +10,7 @@ import {
   type ClassSummary,
   type Gender,
 } from "@/lib/api";
+import { RosterStudent } from "./RosterStudent";
 
 // Inline roster for the selected class. Static export (no Node) rules out a dynamic
 // /classes/[id] route without build-time params, so selection stays client-side here.
@@ -123,20 +124,13 @@ export function RosterPanel({ klass }: { klass: ClassSummary }) {
       ) : students && students.length > 0 ? (
         <ul className="class-list">
           {students.map((s) => (
-            <li key={s.id} className="class-item">
-              <span className="class-name">{s.displayName}</span>
-              <span className="roster-right">
-                {s.gender && <span className="role-tag">{s.gender === "Female" ? "F" : "M"}</span>}
-                <button
-                  className="btn-ghost danger"
-                  aria-label={`Remove ${s.displayName}`}
-                  onClick={() => removeMutation.mutate(s.id)}
-                  disabled={removeMutation.isPending}
-                >
-                  Remove
-                </button>
-              </span>
-            </li>
+            <RosterStudent
+              key={s.id}
+              classId={classId}
+              student={s}
+              onRemove={() => removeMutation.mutate(s.id)}
+              removing={removeMutation.isPending}
+            />
           ))}
         </ul>
       ) : (

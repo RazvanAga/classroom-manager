@@ -366,3 +366,81 @@ button {
 .class-item.voided .class-name {
   text-decoration: line-through;
 }
+
+/* --- Avatars --- */
+
+.roster-student {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.roster-student-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.roster-student-head .class-name {
+  flex: 1 1 auto;
+}
+
+.avatar-thumb {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #ede9fe;
+  border: 1px solid #e3def5;
+}
+
+.avatar-thumb.placeholder {
+  display: inline-block;
+}
+
+.avatar-editor {
+  display: flex;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed #e3def5;
+}
+
+.avatar-preview {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  border-radius: 16px;
+  background: #ede9fe;
+  border: 1px solid #e3def5;
+}
+
+.avatar-slots {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.avatar-slot-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.chip.avatar-option {
+  background: #faf9ff;
+  color: var(--ink);
+  border: 1px solid #e3def5;
+  font-size: 0.82rem;
+  padding: 6px 10px;
+}
+
+.chip.avatar-option.selected {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+}

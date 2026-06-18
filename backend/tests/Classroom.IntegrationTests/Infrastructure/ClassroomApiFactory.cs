@@ -1,3 +1,4 @@
+using Classroom.Api.Features.Avatars;
 using Classroom.Api.Identity;
 using Classroom.Infrastructure;
 using Classroom.Infrastructure.Persistence;
@@ -66,6 +67,10 @@ public class ClassroomApiFactory : WebApplicationFactory<Program>, IAsyncLifetim
 
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         await SeedData.SeedTeacherAsync(scope.ServiceProvider, configuration);
+
+        // The avatar catalog is global and seeded once at startup (design.md §3.3); the dev path does
+        // this in Program, but the "Testing" environment skips that, so the harness seeds it here.
+        await AvatarCatalogSeeder.SeedAsync(context);
     }
 
     // Explicit: xunit's IAsyncLifetime.DisposeAsync returns Task, the base returns ValueTask.

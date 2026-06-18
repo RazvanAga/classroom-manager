@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Classroom.Api.Common.Authorization;
 using Classroom.Api.Common.Security;
 using Classroom.Api.Common.Validation;
+using Classroom.Domain.Avatars;
 using Classroom.Domain.Students;
 using Classroom.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -78,6 +79,9 @@ public static class RosterEndpoints
         };
 
         db.Students.Add(student);
+        // Grant the free default avatar items and equip them, so the student renders a complete,
+        // valid avatar immediately (design.md §3.3). Same SaveChanges as the student insert.
+        await GrantDefaultAvatarAsync(db, [student]);
         await db.SaveChangesAsync();
 
         return Results.Created(
@@ -108,6 +112,8 @@ public static class RosterEndpoints
             .ToList();
 
         db.Students.AddRange(students);
+        // Same default-avatar grant as single add, for every student in the batch (design.md §3.3).
+        await GrantDefaultAvatarAsync(db, students);
         await db.SaveChangesAsync();
 
         var responses = students.Select(ToResponse).ToList();
@@ -147,6 +153,38 @@ public static class RosterEndpoints
     {
         var result = await authz.AuthorizeAsync(user, classId, new ClassMembershipRequirement());
         return result.Succeeded;
+    }
+
+    /// <summary>
+    /// Grants every default catalog item to the given (just-added, not-yet-saved) students and equips
+    /// each in its slot (design.md §3.3). The defaults are loaded once and reused across the batch;
+    /// the rows are queued on the context to be committed in the caller's single SaveChanges.
+    /// </summary>
+    private static async Task GrantDefaultAvatarAsync(ClassroomDbContext db, IReadOnlyCollection<Student> students)
+    {
+        if (students.Count == 0)
+        {
+            return;
+        }
+
+        var defaults = await db.AvatarItems
+            .Where(i => i.IsDefault)
+            .Select(i => new { i.Id, i.Slot })
+            .ToListAsync();
+
+        foreach (var student in students)
+        {
+            foreach (var item in defaults)
+            {
+                db.StudentOwnedItems.Add(new StudentOwnedItem { StudentId = student.Id, ItemId = item.Id });
+                db.StudentEquipped.Add(new StudentEquipped
+                {
+                    StudentId = student.Id,
+                    Slot = item.Slot,
+                    ItemId = item.Id,
+                });
+            }
+        }
     }
 
     private static StudentResponse ToResponse(Student s) =>
