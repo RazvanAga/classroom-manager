@@ -6,6 +6,7 @@ import {
   addStudent,
   bulkAddStudents,
   fetchStudents,
+  purgeStudent,
   removeStudent,
   type ClassSummary,
   type Gender,
@@ -52,10 +53,16 @@ export function RosterPanel({ klass }: { klass: ClassSummary }) {
     onSuccess: invalidate,
   });
 
+  const purgeMutation = useMutation({
+    mutationFn: (studentId: string) => purgeStudent(classId, studentId),
+    onSuccess: invalidate,
+  });
+
   const error =
     (addMutation.error as Error | null) ??
     (bulkMutation.error as Error | null) ??
-    (removeMutation.error as Error | null);
+    (removeMutation.error as Error | null) ??
+    (purgeMutation.error as Error | null);
 
   return (
     <section className="roster">
@@ -130,6 +137,10 @@ export function RosterPanel({ klass }: { klass: ClassSummary }) {
               student={s}
               onRemove={() => removeMutation.mutate(s.id)}
               removing={removeMutation.isPending}
+              // Purge is the irreversible erasure path — Owner-only, mirroring the server's gate.
+              canPurge={klass.role === "Owner"}
+              onPurge={() => purgeMutation.mutate(s.id)}
+              purging={purgeMutation.isPending}
             />
           ))}
         </ul>

@@ -185,6 +185,18 @@ export async function removeStudent(classId: string, studentId: string): Promise
   if (!res.ok) throw new Error(await problemMessage(res, "Could not remove the student."));
 }
 
+// Permanently erase a student's data (Owner only): PII, avatar and inventory are destroyed and their
+// ledger rows anonymized. Irreversible — distinct from and stronger than removeStudent's soft-delete.
+export async function purgeStudent(classId: string, studentId: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/students/${studentId}/purge`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-XSRF-TOKEN": token },
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not purge the student."));
+}
+
 // --- Behaviors ---
 
 export type Behavior = {
