@@ -16,6 +16,7 @@ import { BehaviorPanel } from "./BehaviorPanel";
 import { PointsPanel } from "./PointsPanel";
 import { PickerPanel } from "./PickerPanel";
 import { GroupsPanel } from "./GroupsPanel";
+import { ReportsPanel } from "./ReportsPanel";
 import { TimerPanel } from "./TimerPanel";
 import { KioskView } from "./KioskView";
 
@@ -171,6 +172,7 @@ export default function HomePage() {
         {selected && <RosterPanel klass={selected} />}
         {selected && <BehaviorPanel classId={selected.id} />}
         {selected && <PointsPanel classId={selected.id} />}
+        {selected && <ReportsPanel classId={selected.id} />}
         {selected && <PickerPanel classId={selected.id} />}
         {selected && <GroupsPanel classId={selected.id} />}
         {selected && <TimerPanel />}

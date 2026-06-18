@@ -677,6 +677,150 @@ button {
   padding: 1px 6px;
 }
 
+/* --- Reporting (design.md §9.3) --- */
+.report-controls {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+}
+
+.report-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.report-field input {
+  width: auto;
+}
+
+.report-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.report-headlines {
+  margin: 4px 0 10px;
+}
+
+.report-headlines p {
+  margin: 2px 0;
+}
+
+.breakdown-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) 2fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.breakdown-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.breakdown-track {
+  background: #f0edfb;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.breakdown-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #2f8f57;
+  min-width: 4px;
+}
+
+.breakdown-bar.negative {
+  background: var(--danger);
+}
+
+.breakdown-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-student {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.timeline-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 120px;
+  margin: 12px 0 6px;
+  padding: 8px;
+  background: #faf9ff;
+  border: 1px solid #e3def5;
+  border-radius: 14px;
+}
+
+.timeline-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Top half grows bars upward from the centre baseline; bottom half grows them down. */
+.timeline-top,
+.timeline-bot {
+  flex: 1 1 50%;
+  display: flex;
+  justify-content: center;
+}
+
+.timeline-top {
+  align-items: flex-end;
+}
+
+.timeline-bot {
+  align-items: flex-start;
+}
+
+.timeline-bar {
+  display: block;
+  width: 70%;
+  max-width: 14px;
+  border-radius: 3px;
+}
+
+.timeline-bar.pos {
+  background: #2f8f57;
+}
+
+.timeline-bar.neg {
+  background: var(--danger);
+}
+
+.timeline-axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+}
+
 /* --- Activity timer (design.md §6.1) --- */
 .timer-display {
   margin: 8px 0 14px;

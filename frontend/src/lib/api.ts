@@ -429,6 +429,78 @@ export async function fetchGrouping(classId: string, groupingId: string): Promis
   return res.json();
 }
 
+// --- Reporting ---
+
+// The teacher's local UTC offset in minutes (minutes to add to UTC to reach local time). The server
+// buckets the ledger by local day, so it needs this to place a late-evening award on the right day.
+function localOffsetMinutes(): number {
+  return -new Date().getTimezoneOffset();
+}
+
+export type TimelineDay = {
+  date: string; // yyyy-MM-dd
+  earned: number;
+  spent: number; // <= 0
+  net: number;
+  balance: number; // running wallet at end of day
+};
+
+export type StudentTimeline = {
+  studentId: string;
+  displayName: string;
+  from: string;
+  to: string;
+  openingBalance: number;
+  totalEarned: number;
+  totalSpent: number;
+  days: TimelineDay[];
+};
+
+export async function fetchStudentTimeline(
+  classId: string,
+  studentId: string,
+  from: string,
+  to: string,
+): Promise<StudentTimeline> {
+  const params = new URLSearchParams({ from, to, tzOffsetMinutes: String(localOffsetMinutes()) });
+  const res = await fetch(
+    `/api/classes/${classId}/reports/students/${studentId}/timeline?${params}`,
+    { credentials: "include" },
+  );
+  if (!res.ok) throw new Error(await problemMessage(res, "Failed to load the timeline."));
+  return res.json();
+}
+
+export type BehaviorStat = {
+  behaviorId: string;
+  name: string;
+  count: number;
+  totalPoints: number; // signed
+};
+
+export type BehaviorBreakdown = {
+  from: string;
+  to: string;
+  totalAwarded: number;
+  totalDeducted: number; // <= 0
+  netPoints: number;
+  awardCount: number;
+  behaviors: BehaviorStat[]; // most common first
+};
+
+export async function fetchBehaviorBreakdown(
+  classId: string,
+  from: string,
+  to: string,
+): Promise<BehaviorBreakdown> {
+  const params = new URLSearchParams({ from, to, tzOffsetMinutes: String(localOffsetMinutes()) });
+  const res = await fetch(`/api/classes/${classId}/reports/behaviors?${params}`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Failed to load the breakdown."));
+  return res.json();
+}
+
 // --- Avatars ---
 
 // The always-on layers of the locked DiceBear style (mirrors the backend AvatarSlot enum).

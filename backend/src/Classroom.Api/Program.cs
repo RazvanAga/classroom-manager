@@ -7,6 +7,7 @@ using Classroom.Api.Features.Groups;
 using Classroom.Api.Features.Kiosk;
 using Classroom.Api.Features.Picker;
 using Classroom.Api.Features.Points;
+using Classroom.Api.Features.Reporting;
 using Classroom.Api.Features.Roster;
 using Classroom.Api.Features.Store;
 using Classroom.Api.Identity;
@@ -87,6 +88,7 @@ app.MapStoreEndpoints();
 app.MapKioskEndpoints();
 app.MapPickerEndpoints();
 app.MapGroupsEndpoints();
+app.MapReportingEndpoints();
 
 // Local-dev convenience: apply migrations and seed the teacher on boot. In production,
 // migrations run as an explicit bundle deploy step (design.md §8.3, slice #17).
