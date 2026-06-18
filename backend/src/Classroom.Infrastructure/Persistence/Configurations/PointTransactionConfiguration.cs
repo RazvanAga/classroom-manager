@@ -1,3 +1,4 @@
+using Classroom.Domain.Avatars;
 using Classroom.Domain.Behaviors;
 using Classroom.Domain.Points;
 using Classroom.Domain.Students;
@@ -36,6 +37,14 @@ public class PointTransactionConfiguration : IEntityTypeConfiguration<PointTrans
         builder.HasOne<Behavior>()
             .WithMany()
             .HasForeignKey(t => t.BehaviorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Optional store item, set only on Purchase rows (slice #9). SetNull mirrors BehaviorId: a
+        // purchase's audit row survives even if its catalog option were ever removed. (The catalog is
+        // seeded, not edited, in v1, so this is integrity insurance rather than an expected path.)
+        builder.HasOne<AvatarItem>()
+            .WithMany()
+            .HasForeignKey(t => t.ItemId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Read paths: a student's balance (by student) and undo-by-batch (slice #7).

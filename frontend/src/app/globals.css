@@ -400,6 +400,7 @@ button {
 
 .avatar-editor {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   padding-top: 12px;
   border-top: 1px dashed #e3def5;
@@ -443,4 +444,40 @@ button {
   background: var(--accent);
   color: var(--accent-ink);
   border-color: transparent;
+}
+
+/* The store sits below the preview + slots, spanning the editor's full width. */
+.avatar-store {
+  flex: 1 1 100%;
+  border-top: 1px dashed #e3def5;
+  padding-top: 10px;
+}
+
+.avatar-store-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.wallet-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: #ede9fe;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.chip.avatar-option.buy:not(:disabled) {
+  cursor: pointer;
+}
+
+.chip.avatar-option.buy:disabled {
+  opacity: 0.5;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.85rem;
 }

@@ -46,14 +46,47 @@ public class AvatarCatalogTests
     }
 
     [Fact]
-    public void CreateItems_materializes_one_row_per_template_entry_with_distinct_ids_and_zero_cost()
+    public void CreateItems_materializes_one_row_per_template_entry_with_distinct_ids()
     {
         var items = AvatarCatalog.CreateItems();
 
         Assert.Equal(AvatarCatalog.Template.Count, items.Count);
         Assert.All(items, i => Assert.NotEqual(Guid.Empty, i.Id));
         Assert.Equal(items.Count, items.Select(i => i.Id).Distinct().Count());
-        // Costs are 0 in this slice; the store/economy is slice #9.
-        Assert.All(items, i => Assert.Equal(0, i.Cost));
+    }
+
+    [Fact]
+    public void Defaults_are_free_and_every_non_default_is_priced_above_zero()
+    {
+        var items = AvatarCatalog.CreateItems();
+
+        // Defaults are granted to new students, so they must never cost anything (design.md §3.3).
+        Assert.All(items.Where(i => i.IsDefault), i => Assert.Equal(0, i.Cost));
+        // Every buyable (non-default) option must carry a real price now the store exists (slice #9).
+        Assert.Contains(items, i => !i.IsDefault);
+        Assert.All(items.Where(i => !i.IsDefault), i => Assert.True(i.Cost > 0,
+            $"Non-default option '{i.DisplayName}' must cost > 0, but cost {i.Cost}."));
+    }
+
+    [Theory]
+    [InlineData(AvatarRarity.Common, 10)]
+    [InlineData(AvatarRarity.Rare, 25)]
+    [InlineData(AvatarRarity.Epic, 50)]
+    [InlineData(AvatarRarity.Legendary, 100)]
+    public void CostFor_prices_a_non_default_option_by_its_rarity(AvatarRarity rarity, int expected)
+    {
+        var entry = new AvatarCatalog.Entry(
+            AvatarSlot.Hair, "value", "Name", IsDefault: false, rarity);
+
+        Assert.Equal(expected, AvatarCatalog.CostFor(entry));
+    }
+
+    [Fact]
+    public void CostFor_is_free_for_a_default_regardless_of_rarity()
+    {
+        var entry = new AvatarCatalog.Entry(
+            AvatarSlot.Hair, "value", "Name", IsDefault: true, AvatarRarity.Legendary);
+
+        Assert.Equal(0, AvatarCatalog.CostFor(entry));
     }
 }

@@ -17,10 +17,10 @@ Scope:
 
 ## Acceptance criteria
 
-- [ ] A purchase the student can afford succeeds: wallet decreases, item owned.
-- [ ] A purchase exceeding the wallet is rejected (ProblemDetails).
-- [ ] Buying the same item twice is rejected (unique constraint).
-- [ ] Concurrent purchase attempts cannot drive the balance negative — covered by an integration test.
+- [x] A purchase the student can afford succeeds: wallet decreases, item owned.
+- [x] A purchase exceeding the wallet is rejected (ProblemDetails — 402 Payment Required).
+- [x] Buying the same item twice is rejected (unique constraint — 409 Conflict).
+- [x] Concurrent purchase attempts cannot drive the balance negative — covered by an integration test.
 
 ## Blocked by
 

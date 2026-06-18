@@ -69,8 +69,9 @@ public class AvatarsEndpointsTests(ClassroomApiFactory factory) : IntegrationTes
             var defaults = catalog.Items.Where(i => i.Slot == slot && i.IsDefault).ToList();
             Assert.Single(defaults);
         }
-        // Costs are 0 in this slice (the store is slice #9).
-        Assert.All(catalog.Items, i => Assert.Equal(0, i.Cost));
+        // Pricing (slice #9): defaults are free, every buyable option costs something.
+        Assert.All(catalog.Items.Where(i => i.IsDefault), i => Assert.Equal(0, i.Cost));
+        Assert.All(catalog.Items.Where(i => !i.IsDefault), i => Assert.True(i.Cost > 0));
         // Enum fields serialize as strings on the wire.
         Assert.All(catalog.Items, i => Assert.Contains(i.Slot, AllSlots));
     }

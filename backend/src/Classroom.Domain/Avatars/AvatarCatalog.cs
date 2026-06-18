@@ -8,14 +8,37 @@ namespace Classroom.Domain.Avatars;
 /// <para>
 /// The catalog is seeded from this template <b>once</b> at startup (idempotently) — not per class
 /// (contrast <c>DefaultBehaviors</c>). Every slot has exactly one <see cref="Entry.IsDefault"/> option,
-/// the free starter granted to new students so no one is ever faceless. Costs are 0 in this slice; the
-/// store and pricing arrive in slice #9.
+/// the free starter granted to new students so no one is ever faceless. Each non-default option is
+/// priced by its rarity (slice #9 store); defaults are always free.
 /// </para>
 /// </summary>
 public static class AvatarCatalog
 {
     /// <summary>The DiceBear style this whole catalog is locked to (design.md §3.2). No cross-style mixing.</summary>
     public const string Style = "adventurer";
+
+    /// <summary>
+    /// Spendable-point price of a non-default option, by rarity (slice #9). Defaults are always free
+    /// (every new student is granted them), so a default's rarity never sets a price. Kept here so the
+    /// in-code template is the single source of truth for pricing; the seeder reconciles existing rows.
+    /// </summary>
+    public static int CostFor(Entry entry)
+    {
+        if (entry.IsDefault)
+        {
+            return 0;
+        }
+
+        return entry.Rarity switch
+        {
+            AvatarRarity.Common => 10,
+            AvatarRarity.Rare => 25,
+            AvatarRarity.Epic => 50,
+            AvatarRarity.Legendary => 100,
+            // An unpriced (null-rarity) non-default option has no defined price; treat as free.
+            _ => 0,
+        };
+    }
 
     /// <summary>One catalog row: a single option value for a single slot.</summary>
     public readonly record struct Entry(
@@ -79,7 +102,7 @@ public static class AvatarCatalog
                 Slot = e.Slot,
                 OptionValue = e.OptionValue,
                 DisplayName = e.DisplayName,
-                Cost = 0,
+                Cost = CostFor(e),
                 Rarity = e.Rarity,
                 IsDefault = e.IsDefault,
             })

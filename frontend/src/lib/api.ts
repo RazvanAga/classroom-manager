@@ -307,6 +307,54 @@ export async function fetchStudentAvatar(
   return res.json();
 }
 
+// --- Store ---
+
+// One buyable catalog option, with affordability computed against the student's wallet by the server.
+export type StoreItem = {
+  id: string;
+  slot: AvatarSlot;
+  optionValue: string;
+  displayName: string;
+  cost: number;
+  rarity: AvatarRarity | null;
+  affordable: boolean;
+};
+
+export type Store = {
+  studentId: string;
+  wallet: number;
+  style: string;
+  items: StoreItem[];
+};
+
+export async function fetchStore(classId: string, studentId: string): Promise<Store> {
+  const res = await fetch(`/api/classes/${classId}/students/${studentId}/store`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Failed to load the store.");
+  return res.json();
+}
+
+// Buy an option for a student. The server runs a serializable transaction (no overspend, no
+// double-buy); the cost is the catalog's, never sent by the client.
+export async function purchaseItem(
+  classId: string,
+  studentId: string,
+  itemId: string,
+): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(
+    `/api/classes/${classId}/students/${studentId}/store/purchase`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+      body: JSON.stringify({ itemId }),
+    },
+  );
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not complete the purchase."));
+}
+
 // Equip an option the student already owns in a slot. Free; switching is unrestricted.
 export async function equipItem(
   classId: string,

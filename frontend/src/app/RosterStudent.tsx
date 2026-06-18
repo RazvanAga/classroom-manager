@@ -6,7 +6,9 @@ import { createAvatar } from "@dicebear/core";
 import { adventurer } from "@dicebear/collection";
 import {
   equipItem,
+  fetchStore,
   fetchStudentAvatar,
+  purchaseItem,
   type AvatarSlot,
   type EquippedSlot,
   type Student,
@@ -51,15 +53,34 @@ export function RosterStudent({
   const [open, setOpen] = useState(false);
 
   const avatarKey = ["avatar", classId, student.id];
+  const storeKey = ["store", classId, student.id];
   const { data: avatar } = useQuery({
     queryKey: avatarKey,
     queryFn: () => fetchStudentAvatar(classId, student.id),
+  });
+
+  // The store (catalog minus owned, with the wallet + affordability) is only needed while the
+  // customizer is open.
+  const { data: store } = useQuery({
+    queryKey: storeKey,
+    queryFn: () => fetchStore(classId, student.id),
+    enabled: open,
   });
 
   const equip = useMutation({
     mutationFn: (vars: { slot: AvatarSlot; itemId: string }) =>
       equipItem(classId, student.id, vars.slot, vars.itemId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: avatarKey }),
+  });
+
+  // Buying moves wallet points (a ledger row) and adds to inventory, so refresh both the store and
+  // the avatar (the new option shows up as an equippable owned item).
+  const buy = useMutation({
+    mutationFn: (itemId: string) => purchaseItem(classId, student.id, itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: storeKey });
+      queryClient.invalidateQueries({ queryKey: avatarKey });
+    },
   });
 
   const uri = useMemo(
@@ -134,6 +155,36 @@ export function RosterStudent({
             })}
           </div>
           {equip.isError && <p className="error">{(equip.error as Error).message}</p>}
+
+          <div className="avatar-store">
+            <div className="avatar-store-head">
+              <span className="avatar-slot-label">Store</span>
+              {store && <span className="wallet-tag">{store.wallet} pts</span>}
+            </div>
+            {store && store.items.length === 0 && (
+              <p className="muted">Everything's been bought — nice collection!</p>
+            )}
+            {store && store.items.length > 0 && (
+              <div className="behavior-chips">
+                {store.items.map((item) => (
+                  <button
+                    key={item.id}
+                    className="chip avatar-option buy"
+                    disabled={buy.isPending || !item.affordable}
+                    title={
+                      item.affordable
+                        ? `Buy ${item.displayName} for ${item.cost} pts`
+                        : `Costs ${item.cost} pts — not enough points yet`
+                    }
+                    onClick={() => buy.mutate(item.id)}
+                  >
+                    {SLOT_LABELS[item.slot]}: {item.displayName} · {item.cost}
+                  </button>
+                ))}
+              </div>
+            )}
+            {buy.isError && <p className="error">{(buy.error as Error).message}</p>}
+          </div>
         </div>
       )}
     </li>
