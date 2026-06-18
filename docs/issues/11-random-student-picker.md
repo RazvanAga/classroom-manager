@@ -17,10 +17,10 @@ Scope:
 
 ## Acceptance criteria
 
-- [ ] The picker never repeats a student until all have been picked, then resets — unit-tested.
-- [ ] A pick is deterministic given a fixed seed (testable).
-- [ ] The teacher can reset the cycle on demand.
-- [ ] The picker operates over a class roster.
+- [x] The picker never repeats a student until all have been picked, then resets — unit-tested.
+- [x] A pick is deterministic given a fixed seed (testable).
+- [x] The teacher can reset the cycle on demand.
+- [x] The picker operates over a class roster.
 
 ## Blocked by
 

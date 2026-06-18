@@ -321,6 +321,33 @@ export async function voidBatch(classId: string, batchId: string): Promise<void>
   if (!res.ok) throw new Error(await problemMessage(res, "Could not undo the bulk award."));
 }
 
+// --- Picker ---
+
+// One fair pick. The picker is stateless server-side (no DB table): the client carries the
+// already-picked set for the current cycle and sends it back each turn. `cycleReset` is true when
+// everyone had been picked, so the cycle reset and this pick starts a fresh one.
+export type PickResult = {
+  pickedStudentId: string;
+  pickedDisplayName: string;
+  cycleReset: boolean;
+  alreadyPickedIds: string[];
+};
+
+export async function pickStudent(
+  classId: string,
+  alreadyPickedIds: string[],
+): Promise<PickResult> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/picker/pick`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ alreadyPickedIds }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not pick a student."));
+  return res.json();
+}
+
 // --- Avatars ---
 
 // The always-on layers of the locked DiceBear style (mirrors the backend AvatarSlot enum).

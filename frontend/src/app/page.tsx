@@ -14,6 +14,7 @@ import {
 import { RosterPanel } from "./RosterPanel";
 import { BehaviorPanel } from "./BehaviorPanel";
 import { PointsPanel } from "./PointsPanel";
+import { PickerPanel } from "./PickerPanel";
 import { KioskView } from "./KioskView";
 
 export default function HomePage() {
@@ -168,6 +169,7 @@ export default function HomePage() {
         {selected && <RosterPanel klass={selected} />}
         {selected && <BehaviorPanel classId={selected.id} />}
         {selected && <PointsPanel classId={selected.id} />}
+        {selected && <PickerPanel classId={selected.id} />}
       </div>
     </main>
   );

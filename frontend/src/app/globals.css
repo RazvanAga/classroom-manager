@@ -531,3 +531,49 @@ button {
 .kiosk-exit input {
   width: 100px;
 }
+
+/* --- Random picker (design.md §6.2) --- */
+.picker-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 16px;
+  margin: 8px 0 14px;
+  background: #faf9ff;
+  border: 1px solid #e3def5;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.picker-name {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.picker-placeholder {
+  margin: 0;
+  color: var(--muted);
+}
+
+.picker-reset-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.picker-progress {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
