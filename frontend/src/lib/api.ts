@@ -348,6 +348,87 @@ export async function pickStudent(
   return res.json();
 }
 
+// --- Groups ---
+
+export type GroupMember = { studentId: string; displayName: string; gender: Gender | null };
+export type FormedGroup = { groupNumber: number; members: GroupMember[] };
+
+// An ephemeral, formed-but-unsaved grouping. `seed` reproduces this exact arrangement on save.
+export type FormedGrouping = {
+  groupSize: number;
+  balancedByGender: boolean;
+  seed: number;
+  groups: FormedGroup[];
+};
+
+export type SavedGrouping = {
+  id: string;
+  classId: string;
+  name: string | null;
+  groupSize: number;
+  balancedByGender: boolean;
+  createdAt: string;
+  groups: FormedGroup[];
+};
+
+export type GroupingSummary = {
+  id: string;
+  name: string | null;
+  groupSize: number;
+  balancedByGender: boolean;
+  createdAt: string;
+  groupCount: number;
+  studentCount: number;
+};
+
+export async function previewGrouping(
+  classId: string,
+  groupSize: number,
+  balanceByGender: boolean,
+): Promise<FormedGrouping> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/groupings/preview`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ groupSize, balanceByGender }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not form groups."));
+  return res.json();
+}
+
+export async function saveGrouping(
+  classId: string,
+  name: string | null,
+  groupSize: number,
+  balanceByGender: boolean,
+  seed: number,
+): Promise<SavedGrouping> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/groupings`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ name, groupSize, balanceByGender, seed }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not save the grouping."));
+  return res.json();
+}
+
+export async function fetchGroupings(classId: string): Promise<GroupingSummary[]> {
+  const res = await fetch(`/api/classes/${classId}/groupings`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to load saved groupings.");
+  return res.json();
+}
+
+export async function fetchGrouping(classId: string, groupingId: string): Promise<SavedGrouping> {
+  const res = await fetch(`/api/classes/${classId}/groupings/${groupingId}`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Failed to load the grouping.");
+  return res.json();
+}
+
 // --- Avatars ---
 
 // The always-on layers of the locked DiceBear style (mirrors the backend AvatarSlot enum).

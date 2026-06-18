@@ -17,10 +17,10 @@ Scope:
 
 ## Acceptance criteria
 
-- [ ] Choosing a group size yields evenly-sized groups (differ by ≤1) — unit-tested incl. edge cases (exact division, remainder, fewer students than group size).
-- [ ] The gender-balanced option spreads each bucket (incl. unrecorded) evenly across groups — unit-tested.
-- [ ] Grouping is deterministic given a fixed seed.
-- [ ] A formed grouping can be saved and retrieved.
+- [x] Choosing a group size yields evenly-sized groups (differ by ≤1) — unit-tested incl. edge cases (exact division, remainder, fewer students than group size).
+- [x] The gender-balanced option spreads each bucket (incl. unrecorded) evenly across groups — unit-tested.
+- [x] Grouping is deterministic given a fixed seed.
+- [x] A formed grouping can be saved and retrieved.
 
 ## Blocked by
 

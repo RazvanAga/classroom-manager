@@ -1,6 +1,7 @@
 using Classroom.Domain.Avatars;
 using Classroom.Domain.Behaviors;
 using Classroom.Domain.Classes;
+using Classroom.Domain.Groups;
 using Classroom.Domain.Identity;
 using Classroom.Domain.Points;
 using Classroom.Domain.Students;
@@ -25,6 +26,8 @@ public class ClassroomDbContext(DbContextOptions<ClassroomDbContext> options)
     public DbSet<AvatarItem> AvatarItems => Set<AvatarItem>();
     public DbSet<StudentOwnedItem> StudentOwnedItems => Set<StudentOwnedItem>();
     public DbSet<StudentEquipped> StudentEquipped => Set<StudentEquipped>();
+    public DbSet<Grouping> Groupings => Set<Grouping>();
+    public DbSet<GroupMember> GroupMembers => Set<GroupMember>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

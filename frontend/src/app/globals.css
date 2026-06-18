@@ -577,3 +577,102 @@ button {
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+/* --- Group maker (design.md §6.3) --- */
+.groups-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+}
+
+.groups-size {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.groups-balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.groups-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.groups-title {
+  margin: 16px 0 8px;
+  font-size: 1rem;
+}
+
+.groups-save {
+  display: flex;
+  gap: 8px;
+}
+
+.groups-save input {
+  width: auto;
+}
+
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+
+.group-card {
+  border: 1px solid #e3def5;
+  border-radius: 14px;
+  background: #faf9ff;
+  padding: 12px 14px;
+}
+
+.group-card-title {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.group-members {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.group-members li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+
+.group-gender {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: #ede9fe;
+  border-radius: 999px;
+  padding: 1px 6px;
+}
