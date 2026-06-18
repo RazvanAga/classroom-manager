@@ -227,3 +227,46 @@ export async function fetchLeaderboard(classId: string): Promise<LeaderboardEntr
   if (!res.ok) throw new Error("Failed to load the leaderboard.");
   return res.json();
 }
+
+export type PointTransaction = {
+  id: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  type: "Award" | "Deduction" | "Purchase" | "Adjustment";
+  behaviorId: string | null;
+  behaviorName: string | null;
+  batchId: string | null;
+  reason: string | null;
+  createdAt: string;
+  voidedAt: string | null;
+};
+
+export async function fetchTransactions(classId: string): Promise<PointTransaction[]> {
+  const res = await fetch(`/api/classes/${classId}/points/transactions`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Failed to load recent activity.");
+  return res.json();
+}
+
+// Undo a single award/deduction by soft-voiding it (retained for audit, excluded from totals).
+export async function voidTransaction(classId: string, transactionId: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(
+    `/api/classes/${classId}/points/transactions/${transactionId}/void`,
+    { method: "POST", credentials: "include", headers: { "X-XSRF-TOKEN": token } },
+  );
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not undo the transaction."));
+}
+
+// Undo a whole bulk award by voiding every row sharing its batch id.
+export async function voidBatch(classId: string, batchId: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/points/batches/${batchId}/void`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-XSRF-TOKEN": token },
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not undo the bulk award."));
+}

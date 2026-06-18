@@ -7,6 +7,9 @@ import {
   fetchBehaviors,
   fetchLeaderboard,
   fetchStudents,
+  fetchTransactions,
+  voidBatch,
+  voidTransaction,
 } from "@/lib/api";
 
 // Award points for the selected class: pick students, tap a behavior, and watch the leaderboard
@@ -27,6 +30,16 @@ export function PointsPanel({ classId }: { classId: string }) {
     queryKey: ["leaderboard", classId],
     queryFn: () => fetchLeaderboard(classId),
   });
+  const { data: activity } = useQuery({
+    queryKey: ["transactions", classId],
+    queryFn: () => fetchTransactions(classId),
+  });
+
+  // Both the leaderboard and the activity feed shift whenever points are awarded or undone.
+  const refreshTotals = () => {
+    queryClient.invalidateQueries({ queryKey: ["leaderboard", classId] });
+    queryClient.invalidateQueries({ queryKey: ["transactions", classId] });
+  };
 
   const award = useMutation({
     mutationFn: (behaviorId: string) =>
@@ -34,8 +47,14 @@ export function PointsPanel({ classId }: { classId: string }) {
     onSuccess: () => {
       // Clear the selection so the next behavior isn't accidentally awarded to the previous group.
       setSelected(new Set());
-      queryClient.invalidateQueries({ queryKey: ["leaderboard", classId] });
+      refreshTotals();
     },
+  });
+
+  const undo = useMutation({
+    mutationFn: (tx: { id: string; batchId: string | null }) =>
+      tx.batchId ? voidBatch(classId, tx.batchId) : voidTransaction(classId, tx.id),
+    onSuccess: refreshTotals,
   });
 
   const toggle = (id: string) =>
@@ -143,6 +162,45 @@ export function PointsPanel({ classId }: { classId: string }) {
         </ol>
       ) : (
         <p className="empty">No points awarded yet.</p>
+      )}
+
+      {undo.isError && <p className="error">{(undo.error as Error).message}</p>}
+
+      {activity && activity.length > 0 && (
+        <>
+          <h3 className="leaderboard-title">Recent activity</h3>
+          <ul className="class-list">
+            {activity.map((t) => {
+              const voided = t.voidedAt !== null;
+              const label = t.behaviorName ?? t.reason ?? "Adjustment";
+              return (
+                <li key={t.id} className={`class-item${voided ? " voided" : ""}`}>
+                  <span className="class-name">
+                    {t.studentName}{" "}
+                    <span className="activity-label">{label}</span>
+                  </span>
+                  <span className="roster-right">
+                    <span className={`points-tag${t.amount < 0 ? " negative" : ""}`}>
+                      {t.amount > 0 ? `+${t.amount}` : t.amount}
+                    </span>
+                    {t.batchId && <span className="role-tag">bulk</span>}
+                    {voided ? (
+                      <span className="role-tag">voided</span>
+                    ) : (
+                      <button
+                        className="btn-ghost danger"
+                        disabled={undo.isPending}
+                        onClick={() => undo.mutate({ id: t.id, batchId: t.batchId })}
+                      >
+                        {t.batchId ? "Undo batch" : "Undo"}
+                      </button>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </section>
   );

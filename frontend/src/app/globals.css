@@ -352,3 +352,17 @@ button {
   color: var(--muted);
   font-weight: 700;
 }
+
+.activity-label {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.class-item.voided {
+  opacity: 0.55;
+}
+
+.class-item.voided .class-name {
+  text-decoration: line-through;
+}

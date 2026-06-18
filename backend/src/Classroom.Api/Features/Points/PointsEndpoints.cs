@@ -29,6 +29,17 @@ public static class PointsEndpoints
         group.MapGet("/leaderboard", LeaderboardAsync)
             .WithSummary("Rank the class's students by lifetime earned.");
 
+        group.MapGet("/points/transactions", RecentTransactionsAsync)
+            .WithSummary("List the class's recent point transactions (most recent first), for undo.");
+
+        group.MapPost("/points/transactions/{transactionId:guid}/void", VoidTransactionAsync)
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithSummary("Undo a single award/deduction by soft-voiding it.");
+
+        group.MapPost("/points/batches/{batchId:guid}/void", VoidBatchAsync)
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithSummary("Undo a whole bulk award by soft-voiding every row in its batch.");
+
         return app;
     }
 
@@ -185,6 +196,121 @@ public static class PointsEndpoints
         return Results.Ok(ranked);
     }
 
+    private static async Task<IResult> RecentTransactionsAsync(
+        Guid classId,
+        ClaimsPrincipal user,
+        ClassroomDbContext db,
+        IAuthorizationService authz)
+    {
+        if (!await IsMember(authz, user, classId))
+        {
+            return Forbidden();
+        }
+
+        // Recent activity feed that drives undo: scoped to this class via the student join (which also
+        // excludes soft-deleted students), with the behavior name left-joined for display.
+        var query =
+            from t in db.PointTransactions
+            join s in db.Students on t.StudentId equals s.Id
+            join b in db.Behaviors on t.BehaviorId equals b.Id into behaviorJoin
+            from b in behaviorJoin.DefaultIfEmpty()
+            where s.ClassId == classId
+            orderby t.CreatedAt descending
+            select new TransactionListItem(
+                t.Id,
+                t.StudentId,
+                s.DisplayName,
+                t.Amount,
+                t.Type,
+                t.BehaviorId,
+                b != null ? b.Name : null,
+                t.BatchId,
+                t.Reason,
+                t.CreatedAt,
+                t.VoidedAt);
+
+        var items = await query.Take(50).ToListAsync();
+        return Results.Ok(items);
+    }
+
+    private static async Task<IResult> VoidTransactionAsync(
+        Guid classId,
+        Guid transactionId,
+        ClaimsPrincipal user,
+        ClassroomDbContext db,
+        IAuthorizationService authz)
+    {
+        if (!await IsMember(authz, user, classId))
+        {
+            return Forbidden();
+        }
+
+        // Scope to the class via the student membership check — a transaction id from another class
+        // simply won't be found (cross-tenant guard).
+        var transaction = await db.PointTransactions
+            .Where(t => t.Id == transactionId)
+            .Where(t => db.Students.Any(s => s.Id == t.StudentId && s.ClassId == classId))
+            .FirstOrDefaultAsync();
+        if (transaction is null)
+        {
+            return TransactionNotFound();
+        }
+
+        if (transaction.VoidedAt is not null)
+        {
+            return AlreadyVoided();
+        }
+
+        // Soft-void (design.md §2.4): retained for audit, excluded from every aggregation.
+        transaction.VoidedAt = DateTime.UtcNow;
+        transaction.VoidedByTeacherId = user.GetTeacherId();
+        await db.SaveChangesAsync();
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> VoidBatchAsync(
+        Guid classId,
+        Guid batchId,
+        ClaimsPrincipal user,
+        ClassroomDbContext db,
+        IAuthorizationService authz)
+    {
+        if (!await IsMember(authz, user, classId))
+        {
+            return Forbidden();
+        }
+
+        var rows = await db.PointTransactions
+            .Where(t => t.BatchId == batchId)
+            .Where(t => db.Students.Any(s => s.Id == t.StudentId && s.ClassId == classId))
+            .ToListAsync();
+        if (rows.Count == 0)
+        {
+            return Results.Problem(
+                title: "Batch not found",
+                detail: "No such bulk award exists in this class.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        var toVoid = rows.Where(t => t.VoidedAt is null).ToList();
+        if (toVoid.Count == 0)
+        {
+            return AlreadyVoided();
+        }
+
+        // Void every still-live row of the batch as a unit (design.md §2.4).
+        var now = DateTime.UtcNow;
+        var teacherId = user.GetTeacherId();
+        foreach (var transaction in toVoid)
+        {
+            transaction.VoidedAt = now;
+            transaction.VoidedByTeacherId = teacherId;
+        }
+
+        await db.SaveChangesAsync();
+        return Results.Ok(new BatchVoidResponse(batchId, toVoid.Count));
+    }
+
     private static async Task<bool> IsMember(
         IAuthorizationService authz, ClaimsPrincipal user, Guid classId)
     {
@@ -199,4 +325,14 @@ public static class PointsEndpoints
         title: "Forbidden",
         detail: "You do not have access to this class.",
         statusCode: StatusCodes.Status403Forbidden);
+
+    private static IResult TransactionNotFound() => Results.Problem(
+        title: "Transaction not found",
+        detail: "No such transaction exists in this class.",
+        statusCode: StatusCodes.Status404NotFound);
+
+    private static IResult AlreadyVoided() => Results.Problem(
+        title: "Already voided",
+        detail: "This transaction has already been undone.",
+        statusCode: StatusCodes.Status409Conflict);
 }

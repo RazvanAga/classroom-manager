@@ -16,7 +16,7 @@ If a decision in code conflicts with these docs, stop and reconcile rather than 
 
 ## Status
 
-Issues **#2–#6 complete** (walking skeleton, classes + authz, roster, behavior catalog, points ledger + wallet/lifetime + leaderboard). Next in dependency order: **#7 — Undo via soft-void** (now unblocked: needs #6; the `PointTransaction` void columns already exist). #8 (avatar foundation, needs #4) is also available. Build in dependency order; respect each ticket's `Blocked by` (see docs/issues/README.md).
+Issues **#2–#7 complete** (walking skeleton, classes + authz, roster, behavior catalog, points ledger + wallet/lifetime + leaderboard, undo via soft-void). Next in dependency order: **#8 — Avatar foundation (DiceBear + defaults + equip)** (needs #4). #9 (store + transactional purchase) needs #6 + #8. Build in dependency order; respect each ticket's `Blocked by` (see docs/issues/README.md).
 
 ## Workflow conventions
 

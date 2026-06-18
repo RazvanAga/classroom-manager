@@ -34,6 +34,27 @@ public record BalanceResponse(Guid StudentId, int Wallet, int LifetimeEarned);
 /// <summary>One leaderboard rank: a student with their wallet and lifetime-earned totals.</summary>
 public record LeaderboardEntryResponse(Guid StudentId, string DisplayName, int Wallet, int LifetimeEarned);
 
+/// <summary>
+/// One row in the recent-activity feed that drives undo. Carries the display context (student and
+/// behavior names) and <see cref="VoidedAt"/> so the UI can show — and stop offering undo on — voided
+/// rows. <see cref="BatchId"/> lets the UI undo a bulk award as a unit (design.md §2.4).
+/// </summary>
+public record TransactionListItem(
+    Guid Id,
+    Guid StudentId,
+    string StudentName,
+    int Amount,
+    PointTransactionType Type,
+    Guid? BehaviorId,
+    string? BehaviorName,
+    Guid? BatchId,
+    string? Reason,
+    DateTime CreatedAt,
+    DateTime? VoidedAt);
+
+/// <summary>The result of voiding a bulk award by batch id.</summary>
+public record BatchVoidResponse(Guid BatchId, int VoidedCount);
+
 public class AwardPointsRequestValidator : AbstractValidator<AwardPointsRequest>
 {
     public AwardPointsRequestValidator()
