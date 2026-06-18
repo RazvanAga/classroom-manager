@@ -481,3 +481,53 @@ button {
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+/* --- Kiosk mode (design.md §5.4) --- */
+.kiosk-launch {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e3def5;
+}
+
+.kiosk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.kiosk-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px;
+  background: #fff;
+  border: 1px solid #e3def5;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.05s;
+}
+
+.kiosk-tile:hover {
+  border-color: var(--accent);
+}
+
+.kiosk-tile:active {
+  transform: scale(0.98);
+}
+
+.kiosk-tile-name {
+  font-weight: 600;
+  text-align: center;
+}
+
+.kiosk-exit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kiosk-exit input {
+  width: 100px;
+}

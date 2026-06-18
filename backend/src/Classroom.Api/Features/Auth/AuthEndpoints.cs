@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Classroom.Api.Common.Authorization;
 using Classroom.Api.Common.Security;
 using Classroom.Api.Common.Validation;
 using Classroom.Domain.Identity;
@@ -70,6 +71,13 @@ public static class AuthEndpoints
         ClaimsPrincipal principal,
         UserManager<ApplicationUser> userManager)
     {
+        // A kiosk principal is not a teacher (its id claim is a non-GUID session sentinel); treat
+        // "who is the teacher?" as unauthenticated so the SPA shows the kiosk view, not a 500.
+        if (principal.IsKiosk())
+        {
+            return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
+        }
+
         var user = await userManager.GetUserAsync(principal);
         if (user is null)
         {

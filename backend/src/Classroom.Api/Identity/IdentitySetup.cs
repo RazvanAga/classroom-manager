@@ -1,5 +1,6 @@
 using Classroom.Domain.Identity;
 using Classroom.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 
@@ -27,8 +28,36 @@ public static class IdentitySetup
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
-        services.AddAuthentication(IdentityConstants.ApplicationScheme)
-            .AddIdentityCookies();
+        // The default scheme is a "smart" policy scheme (KioskAuth.PolicyScheme): when the kiosk
+        // cookie is present it forwards to the kiosk scheme so HttpContext.User is the reduced-scope
+        // kiosk principal; otherwise it forwards to the teacher application scheme (design.md §5.4).
+        var authBuilder = services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = KioskAuth.PolicyScheme;
+        });
+        authBuilder.AddIdentityCookies();
+
+        // The kiosk session: its own short-lived cookie under its own scheme. Same API-style
+        // 401/403 (no login redirect) and HttpOnly/SameSite hardening as the teacher cookie.
+        authBuilder.AddCookie(KioskAuth.Scheme, options =>
+        {
+            options.Cookie.Name = KioskAuth.CookieName;
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.ExpireTimeSpan = KioskAuth.Lifetime;
+            options.SlidingExpiration = false; // short-lived by design; re-enter to refresh
+            options.Events.OnRedirectToLogin = ApiStatusCode(StatusCodes.Status401Unauthorized);
+            options.Events.OnRedirectToAccessDenied = ApiStatusCode(StatusCodes.Status403Forbidden);
+        });
+
+        authBuilder.AddPolicyScheme(KioskAuth.PolicyScheme, displayName: "Classroom (teacher or kiosk)", options =>
+        {
+            options.ForwardDefaultSelector = context =>
+                context.Request.Cookies.ContainsKey(KioskAuth.CookieName)
+                    ? KioskAuth.Scheme
+                    : IdentityConstants.ApplicationScheme;
+        });
 
         services.ConfigureApplicationCookie(options =>
         {
@@ -40,20 +69,23 @@ public static class IdentitySetup
             options.SlidingExpiration = true;
 
             // This is an API, not an MVC app: don't 302 to /Account/Login — surface the status.
-            options.Events.OnRedirectToLogin = context =>
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                return Task.CompletedTask;
-            };
-            options.Events.OnRedirectToAccessDenied = context =>
-            {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                return Task.CompletedTask;
-            };
+            options.Events.OnRedirectToLogin = ApiStatusCode(StatusCodes.Status401Unauthorized);
+            options.Events.OnRedirectToAccessDenied = ApiStatusCode(StatusCodes.Status403Forbidden);
         });
 
         services.AddAuthorization();
 
         return services;
     }
+
+    /// <summary>
+    /// Cookie redirect event that turns the would-be login/access-denied redirect into a bare
+    /// status code — the app is an API, so it surfaces 401/403 rather than 302-ing to an MVC page.
+    /// </summary>
+    private static Func<RedirectContext<CookieAuthenticationOptions>, Task> ApiStatusCode(int statusCode) =>
+        context =>
+        {
+            context.Response.StatusCode = statusCode;
+            return Task.CompletedTask;
+        };
 }

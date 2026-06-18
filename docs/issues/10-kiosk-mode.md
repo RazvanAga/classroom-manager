@@ -17,10 +17,10 @@ Scope:
 
 ## Acceptance criteria
 
-- [ ] Entering kiosk produces a reduced-scope session scoped to the class.
-- [ ] In kiosk, a student can browse/shop/equip for the selected student only.
-- [ ] Award/deduct/delete/class-management endpoints reject the kiosk principal (403) — covered by an integration test.
-- [ ] Exiting kiosk requires the correct PIN and restores the full teacher session.
+- [x] Entering kiosk produces a reduced-scope session scoped to the class.
+- [x] In kiosk, a student can browse/shop/equip for the selected student only.
+- [x] Award/deduct/delete/class-management endpoints reject the kiosk principal (403) — covered by an integration test.
+- [x] Exiting kiosk requires the correct PIN and restores the full teacher session.
 
 ## Blocked by
 

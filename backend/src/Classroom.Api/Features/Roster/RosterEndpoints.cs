@@ -45,7 +45,9 @@ public static class RosterEndpoints
         ClassroomDbContext db,
         IAuthorizationService authz)
     {
-        if (!await IsMember(authz, user, classId))
+        // Roster read is the one roster endpoint a kiosk session may reach (design.md §5.4) — a
+        // student taps their own name. The mutating endpoints below keep the teacher-only gate.
+        if (!await IsKioskOrMember(authz, user, classId))
         {
             return Forbidden();
         }
@@ -152,6 +154,13 @@ public static class RosterEndpoints
         IAuthorizationService authz, ClaimsPrincipal user, Guid classId)
     {
         var result = await authz.AuthorizeAsync(user, classId, new ClassMembershipRequirement());
+        return result.Succeeded;
+    }
+
+    private static async Task<bool> IsKioskOrMember(
+        IAuthorizationService authz, ClaimsPrincipal user, Guid classId)
+    {
+        var result = await authz.AuthorizeAsync(user, classId, new KioskOrMemberRequirement());
         return result.Succeeded;
     }
 

@@ -3,10 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { createClass, fetchClasses, fetchMe, logout } from "@/lib/api";
+import {
+  createClass,
+  enterKiosk,
+  fetchClasses,
+  fetchKioskSession,
+  fetchMe,
+  logout,
+} from "@/lib/api";
 import { RosterPanel } from "./RosterPanel";
 import { BehaviorPanel } from "./BehaviorPanel";
 import { PointsPanel } from "./PointsPanel";
+import { KioskView } from "./KioskView";
 
 export default function HomePage() {
   const router = useRouter();
@@ -14,12 +22,29 @@ export default function HomePage() {
   const [name, setName] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data: me, isLoading } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
+  // A kiosk session takes over the whole app, so check for it first. While it loads we hold off on
+  // the teacher queries (and the login redirect) to avoid a flash of the wrong view.
+  const { data: kiosk, isLoading: kioskLoading } = useQuery({
+    queryKey: ["kioskSession"],
+    queryFn: fetchKioskSession,
+  });
+
+  const { data: me, isLoading: meLoading } = useQuery({
+    queryKey: ["me"],
+    queryFn: fetchMe,
+    enabled: !kioskLoading && !kiosk,
+  });
+  const isLoading = kioskLoading || (!kiosk && meLoading);
 
   const { data: classes } = useQuery({
     queryKey: ["classes"],
     queryFn: fetchClasses,
     enabled: !!me,
+  });
+
+  const enterKioskMutation = useMutation({
+    mutationFn: (classId: string) => enterKiosk(classId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kioskSession"] }),
   });
 
   const selected = classes?.find((c) => c.id === selectedId) ?? null;
@@ -38,10 +63,14 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    if (!isLoading && me === null) {
+    if (!isLoading && !kiosk && me === null) {
       router.replace("/login");
     }
-  }, [isLoading, me, router]);
+  }, [isLoading, kiosk, me, router]);
+
+  if (kiosk) {
+    return <KioskView session={kiosk} />;
+  }
 
   if (isLoading || !me) {
     return (
@@ -119,6 +148,21 @@ export default function HomePage() {
           </ul>
         ) : (
           <p className="empty">No classes yet — create your first one above.</p>
+        )}
+
+        {selected && (
+          <div className="kiosk-launch">
+            <button
+              className="btn-ghost"
+              onClick={() => enterKioskMutation.mutate(selected.id)}
+              disabled={enterKioskMutation.isPending}
+            >
+              {enterKioskMutation.isPending ? "Entering…" : `Enter kiosk mode for ${selected.name}`}
+            </button>
+            {enterKioskMutation.isError && (
+              <p className="error">{(enterKioskMutation.error as Error).message}</p>
+            )}
+          </div>
         )}
 
         {selected && <RosterPanel klass={selected} />}

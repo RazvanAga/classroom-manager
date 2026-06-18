@@ -55,7 +55,8 @@ public static class AvatarsEndpoints
         ClassroomDbContext db,
         IAuthorizationService authz)
     {
-        if (!await IsMember(authz, user, classId))
+        // Avatar read is kiosk-reachable (design.md §5.4): the kiosk shows the student their avatar.
+        if (!await IsKioskOrMember(authz, user, classId))
         {
             return Forbidden();
         }
@@ -97,7 +98,8 @@ public static class AvatarsEndpoints
         ClassroomDbContext db,
         IAuthorizationService authz)
     {
-        if (!await IsMember(authz, user, classId))
+        // Equip is kiosk-reachable (design.md §5.4): the student changes their own owned options.
+        if (!await IsKioskOrMember(authz, user, classId))
         {
             return Forbidden();
         }
@@ -155,10 +157,10 @@ public static class AvatarsEndpoints
         return Results.Ok(new EquippedSlotResponse(parsedSlot, request.ItemId, optionValue));
     }
 
-    private static async Task<bool> IsMember(
+    private static async Task<bool> IsKioskOrMember(
         IAuthorizationService authz, ClaimsPrincipal user, Guid classId)
     {
-        var result = await authz.AuthorizeAsync(user, classId, new ClassMembershipRequirement());
+        var result = await authz.AuthorizeAsync(user, classId, new KioskOrMemberRequirement());
         return result.Succeeded;
     }
 

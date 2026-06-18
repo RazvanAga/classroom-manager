@@ -17,7 +17,12 @@ public class ClassOwnerHandler(ClassroomDbContext db)
         ClassOwnerRequirement requirement,
         Guid classId)
     {
-        var teacherId = context.User.GetTeacherId();
+        // Fail closed for a non-teacher principal (e.g. a kiosk session): deny rather than throw, so
+        // destructive teacher-only endpoints return a clean 403 (design.md §5.4).
+        if (!context.User.TryGetTeacherId(out var teacherId))
+        {
+            return;
+        }
 
         var isOwner = await db.Classes
             .AnyAsync(c => c.Id == classId

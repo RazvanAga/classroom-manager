@@ -1,43 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createAvatar } from "@dicebear/core";
-import { adventurer } from "@dicebear/collection";
-import {
-  equipItem,
-  fetchStore,
-  fetchStudentAvatar,
-  purchaseItem,
-  type AvatarSlot,
-  type EquippedSlot,
-  type Student,
-} from "@/lib/api";
-
-// The slot order shown in the customizer (matches the always-on slots the backend models).
-const SLOT_ORDER: AvatarSlot[] = ["Hair", "HairColor", "SkinColor", "Eyes", "Mouth"];
-const SLOT_LABELS: Record<AvatarSlot, string> = {
-  Hair: "Hair",
-  HairColor: "Hair color",
-  SkinColor: "Skin",
-  Eyes: "Eyes",
-  Mouth: "Mouth",
-};
-
-// Compose the DiceBear SVG from the equipped options. The backend stores no render metadata
-// (design.md §3.2) — the frontend owns composition entirely. The enum slot maps to the DiceBear
-// option key by lower-casing the first letter (HairColor → hairColor).
-function avatarUri(seed: string, equipped: EquippedSlot[], size: number): string {
-  const options: Record<string, string[]> = {};
-  for (const e of equipped) {
-    const key = e.slot.charAt(0).toLowerCase() + e.slot.slice(1);
-    options[key] = [e.optionValue];
-  }
-  return createAvatar(adventurer, { seed, size, ...options }).toDataUri();
-}
+import { useQuery } from "@tanstack/react-query";
+import { fetchStudentAvatar, type Student } from "@/lib/api";
+import { StudentShop, avatarUri } from "./StudentShop";
 
 // One roster row: the student's composed avatar, name, a customize toggle, and remove. The avatar
-// and its owned options are fetched per student (small classes, so N light queries are fine).
+// is fetched per student (small classes, so N light queries are fine); the customizer + store live
+// in the shared StudentShop, mounted only while open.
 export function RosterStudent({
   classId,
   student,
@@ -49,51 +19,17 @@ export function RosterStudent({
   onRemove: () => void;
   removing: boolean;
 }) {
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const avatarKey = ["avatar", classId, student.id];
-  const storeKey = ["store", classId, student.id];
   const { data: avatar } = useQuery({
-    queryKey: avatarKey,
+    queryKey: ["avatar", classId, student.id],
     queryFn: () => fetchStudentAvatar(classId, student.id),
-  });
-
-  // The store (catalog minus owned, with the wallet + affordability) is only needed while the
-  // customizer is open.
-  const { data: store } = useQuery({
-    queryKey: storeKey,
-    queryFn: () => fetchStore(classId, student.id),
-    enabled: open,
-  });
-
-  const equip = useMutation({
-    mutationFn: (vars: { slot: AvatarSlot; itemId: string }) =>
-      equipItem(classId, student.id, vars.slot, vars.itemId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: avatarKey }),
-  });
-
-  // Buying moves wallet points (a ledger row) and adds to inventory, so refresh both the store and
-  // the avatar (the new option shows up as an equippable owned item).
-  const buy = useMutation({
-    mutationFn: (itemId: string) => purchaseItem(classId, student.id, itemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: storeKey });
-      queryClient.invalidateQueries({ queryKey: avatarKey });
-    },
   });
 
   const uri = useMemo(
     () => (avatar ? avatarUri(student.id, avatar.equipped, 96) : null),
     [avatar, student.id],
   );
-
-  // Currently-equipped item per slot, for highlighting the active option.
-  const equippedBySlot = useMemo(() => {
-    const map = new Map<AvatarSlot, string>();
-    for (const e of avatar?.equipped ?? []) map.set(e.slot, e.itemId);
-    return map;
-  }, [avatar]);
 
   return (
     <li className="class-item roster-student">
@@ -127,66 +63,7 @@ export function RosterStudent({
         </span>
       </div>
 
-      {open && avatar && (
-        <div className="avatar-editor">
-          <img className="avatar-preview" src={uri ?? undefined} width={96} height={96} alt="" />
-          <div className="avatar-slots">
-            {SLOT_ORDER.map((slot) => {
-              const options = avatar.owned.filter((o) => o.slot === slot);
-              if (options.length === 0) return null;
-              const activeId = equippedBySlot.get(slot);
-              return (
-                <div key={slot} className="avatar-slot">
-                  <span className="avatar-slot-label">{SLOT_LABELS[slot]}</span>
-                  <div className="behavior-chips">
-                    {options.map((opt) => (
-                      <button
-                        key={opt.id}
-                        className={`chip avatar-option${opt.id === activeId ? " selected" : ""}`}
-                        disabled={equip.isPending || opt.id === activeId}
-                        onClick={() => equip.mutate({ slot, itemId: opt.id })}
-                      >
-                        {opt.displayName}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {equip.isError && <p className="error">{(equip.error as Error).message}</p>}
-
-          <div className="avatar-store">
-            <div className="avatar-store-head">
-              <span className="avatar-slot-label">Store</span>
-              {store && <span className="wallet-tag">{store.wallet} pts</span>}
-            </div>
-            {store && store.items.length === 0 && (
-              <p className="muted">Everything's been bought — nice collection!</p>
-            )}
-            {store && store.items.length > 0 && (
-              <div className="behavior-chips">
-                {store.items.map((item) => (
-                  <button
-                    key={item.id}
-                    className="chip avatar-option buy"
-                    disabled={buy.isPending || !item.affordable}
-                    title={
-                      item.affordable
-                        ? `Buy ${item.displayName} for ${item.cost} pts`
-                        : `Costs ${item.cost} pts — not enough points yet`
-                    }
-                    onClick={() => buy.mutate(item.id)}
-                  >
-                    {SLOT_LABELS[item.slot]}: {item.displayName} · {item.cost}
-                  </button>
-                ))}
-              </div>
-            )}
-            {buy.isError && <p className="error">{(buy.error as Error).message}</p>}
-          </div>
-        </div>
-      )}
+      {open && <StudentShop classId={classId} studentId={student.id} />}
     </li>
   );
 }

@@ -3,6 +3,7 @@ using Classroom.Api.Features.Auth;
 using Classroom.Api.Features.Avatars;
 using Classroom.Api.Features.Behaviors;
 using Classroom.Api.Features.Classes;
+using Classroom.Api.Features.Kiosk;
 using Classroom.Api.Features.Points;
 using Classroom.Api.Features.Roster;
 using Classroom.Api.Features.Store;
@@ -49,6 +50,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 // destructive ops. Scoped because they query the DbContext.
 builder.Services.AddScoped<IAuthorizationHandler, ClassMembershipHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ClassOwnerHandler>();
+// Kiosk-reachable endpoints (roster read, shop, equip) accept a member-teacher OR a kiosk
+// principal scoped to the same class (design.md §5.4).
+builder.Services.AddScoped<IAuthorizationHandler, KioskOrMemberHandler>();
 
 builder.Services.AddOpenApi();
 
@@ -78,6 +82,7 @@ app.MapBehaviorEndpoints();
 app.MapPointEndpoints();
 app.MapAvatarEndpoints();
 app.MapStoreEndpoints();
+app.MapKioskEndpoints();
 
 // Local-dev convenience: apply migrations and seed the teacher on boot. In production,
 // migrations run as an explicit bundle deploy step (design.md §8.3, slice #17).

@@ -74,6 +74,56 @@ export async function createClass(name: string): Promise<ClassSummary> {
   return res.json();
 }
 
+// --- Kiosk ---
+
+// A reduced-scope kiosk session scoped to one class (design.md §5.4). Students shop/equip; teacher
+// admin actions are rejected server-side. Exiting needs the teacher's PIN.
+export type KioskSession = { classId: string; className: string };
+
+// Returns the current kiosk session, or null when not in kiosk mode (403/404).
+export async function fetchKioskSession(): Promise<KioskSession | null> {
+  const res = await fetch("/api/kiosk/me", { credentials: "include" });
+  if (res.status === 401 || res.status === 403 || res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to load the kiosk session.");
+  return res.json();
+}
+
+export async function enterKiosk(classId: string): Promise<KioskSession> {
+  const token = await antiforgeryToken();
+  const res = await fetch("/api/kiosk/enter", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ classId }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not enter kiosk mode."));
+  return res.json();
+}
+
+// Exit kiosk mode. A wrong PIN throws (the session stays in kiosk); a correct PIN restores the
+// full teacher session server-side.
+export async function exitKiosk(pin: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch("/api/kiosk/exit", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ pin }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "That PIN is incorrect."));
+}
+
+export async function setKioskPin(pin: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch("/api/kiosk/pin", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ pin }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not set the PIN."));
+}
+
 // --- Roster ---
 
 export type Gender = "Female" | "Male";

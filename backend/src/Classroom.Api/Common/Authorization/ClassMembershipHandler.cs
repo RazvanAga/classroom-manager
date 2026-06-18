@@ -17,7 +17,12 @@ public class ClassMembershipHandler(ClassroomDbContext db)
         ClassMembershipRequirement requirement,
         Guid classId)
     {
-        var teacherId = context.User.GetTeacherId();
+        // Fail closed for a non-teacher principal (e.g. a kiosk session has no teacher id claim):
+        // deny rather than throw, so teacher-only endpoints return a clean 403 (design.md §5.4).
+        if (!context.User.TryGetTeacherId(out var teacherId))
+        {
+            return;
+        }
 
         var isMember = await db.Classes
             .AnyAsync(c => c.Id == classId && c.Teachers.Any(ct => ct.TeacherId == teacherId));

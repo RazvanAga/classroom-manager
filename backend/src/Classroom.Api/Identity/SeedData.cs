@@ -17,6 +17,7 @@ public static class SeedData
         var email = configuration["SeedTeacher:Email"] ?? "teacher@classroom.local";
         var displayName = configuration["SeedTeacher:DisplayName"] ?? "Demo Teacher";
         var password = configuration["SeedTeacher:Password"] ?? "Passw0rd!";
+        var kioskPin = configuration["SeedTeacher:KioskPin"] ?? "1234";
 
         if (await users.FindByEmailAsync(email) is not null)
         {
@@ -31,6 +32,11 @@ public static class SeedData
             EmailConfirmed = true, // no SMTP in v1; seeded accounts are pre-confirmed
             DisplayName = displayName,
         };
+
+        // Seed a default kiosk exit PIN so the demo teacher can leave kiosk mode out of the box
+        // (design.md §5.4). Hashed with the same hasher as passwords — never plaintext.
+        var pinHasher = services.GetRequiredService<IPasswordHasher<ApplicationUser>>();
+        teacher.KioskPinHash = pinHasher.HashPassword(teacher, kioskPin);
 
         var result = await users.CreateAsync(teacher, password);
         if (!result.Succeeded)

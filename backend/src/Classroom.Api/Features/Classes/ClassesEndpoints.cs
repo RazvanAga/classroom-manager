@@ -56,7 +56,12 @@ public static class ClassesEndpoints
         ClaimsPrincipal user,
         ClassroomDbContext db)
     {
-        var teacherId = user.GetTeacherId();
+        // No class resource exists yet to gate on, so guard here: a kiosk principal (no teacher id)
+        // must not create classes — fail closed with 403 rather than throwing (design.md §5.4).
+        if (!user.TryGetTeacherId(out var teacherId))
+        {
+            return Forbidden();
+        }
 
         var newClass = new Class { Name = request.Name };
         newClass.Teachers.Add(new ClassTeacher { TeacherId = teacherId, Role = ClassRole.Owner });
@@ -76,7 +81,12 @@ public static class ClassesEndpoints
         ClassroomDbContext db,
         bool includeArchived = false)
     {
-        var teacherId = user.GetTeacherId();
+        // The class list is "the current teacher's classes"; a kiosk principal has none and must not
+        // enumerate them — fail closed with 403 rather than throwing (design.md §5.4).
+        if (!user.TryGetTeacherId(out var teacherId))
+        {
+            return Forbidden();
+        }
 
         var classes = await db.Classes
             .Where(c => c.Teachers.Any(ct => ct.TeacherId == teacherId)

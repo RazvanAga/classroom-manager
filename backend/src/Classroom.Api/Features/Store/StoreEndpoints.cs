@@ -43,7 +43,8 @@ public static class StoreEndpoints
         ClassroomDbContext db,
         IAuthorizationService authz)
     {
-        if (!await IsMember(authz, user, classId))
+        // Shop is kiosk-reachable (design.md §5.4): a kiosk session scoped to this class, or a member.
+        if (!await IsKioskOrMember(authz, user, classId))
         {
             return Forbidden();
         }
@@ -81,7 +82,8 @@ public static class StoreEndpoints
         ClassroomDbContext db,
         IAuthorizationService authz)
     {
-        if (!await IsMember(authz, user, classId))
+        // Purchase is kiosk-reachable (design.md §5.4); the txn/affordability guarantees are unchanged.
+        if (!await IsKioskOrMember(authz, user, classId))
         {
             return Forbidden();
         }
@@ -179,10 +181,10 @@ public static class StoreEndpoints
         return false;
     }
 
-    private static async Task<bool> IsMember(
+    private static async Task<bool> IsKioskOrMember(
         IAuthorizationService authz, ClaimsPrincipal user, Guid classId)
     {
-        var result = await authz.AuthorizeAsync(user, classId, new ClassMembershipRequirement());
+        var result = await authz.AuthorizeAsync(user, classId, new KioskOrMemberRequirement());
         return result.Succeeded;
     }
 
