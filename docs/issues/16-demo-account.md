@@ -17,10 +17,10 @@ Scope:
 
 ## Acceptance criteria
 
-- [ ] "Try demo" logs a reviewer into the demo account in one click.
-- [ ] The demo is fully interactive (award points, shop, run tools).
-- [ ] A scheduled job re-seeds the demo to a known rich state.
-- [ ] After re-seed, the demo shows a populated class with histories and avatars.
+- [x] "Try demo" logs a reviewer into the demo account in one click.
+- [x] The demo is fully interactive (award points, shop, run tools).
+- [x] A scheduled job re-seeds the demo to a known rich state.
+- [x] After re-seed, the demo shows a populated class with histories and avatars.
 
 ## Blocked by
 

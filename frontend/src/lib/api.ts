@@ -33,6 +33,18 @@ export async function login(email: string, password: string): Promise<void> {
   }
 }
 
+// One-click sign-in to the shared, writable demo account (design.md §9.2). No credentials: the server
+// signs in its seeded demo teacher. The account is periodically re-seeded to a rich, populated state.
+export async function demoLogin(): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch("/api/auth/demo-login", {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-XSRF-TOKEN": token },
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not start the demo."));
+}
+
 export async function logout(): Promise<void> {
   const token = await antiforgeryToken();
   const res = await fetch("/api/auth/logout", {

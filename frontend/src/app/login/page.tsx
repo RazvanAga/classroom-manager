@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { fetchMe, login } from "@/lib/api";
+import { demoLogin, fetchMe, login } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,13 +11,20 @@ export default function LoginPage() {
   const [email, setEmail] = useState("teacher@classroom.local");
   const [password, setPassword] = useState("");
 
+  const onAuthed = async () => {
+    const me = await fetchMe();
+    queryClient.setQueryData(["me"], me);
+    router.replace("/");
+  };
+
   const loginMutation = useMutation({
     mutationFn: () => login(email, password),
-    onSuccess: async () => {
-      const me = await fetchMe();
-      queryClient.setQueryData(["me"], me);
-      router.replace("/");
-    },
+    onSuccess: onAuthed,
+  });
+
+  const demoMutation = useMutation({
+    mutationFn: demoLogin,
+    onSuccess: onAuthed,
   });
 
   return (
@@ -58,6 +65,24 @@ export default function LoginPage() {
 
         {loginMutation.isError && (
           <p className="error">{(loginMutation.error as Error).message}</p>
+        )}
+
+        <div className="divider">or</div>
+
+        <button
+          className="btn-ghost full"
+          type="button"
+          onClick={() => demoMutation.mutate()}
+          disabled={demoMutation.isPending}
+        >
+          {demoMutation.isPending ? "Starting demo…" : "Try the demo"}
+        </button>
+        <p className="subtitle demo-hint">
+          Jump into a populated sample class — no account needed.
+        </p>
+
+        {demoMutation.isError && (
+          <p className="error">{(demoMutation.error as Error).message}</p>
         )}
       </form>
     </main>

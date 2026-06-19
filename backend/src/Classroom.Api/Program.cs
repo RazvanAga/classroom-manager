@@ -41,6 +41,12 @@ builder.Services.AddInfrastructure(connectionString);
 
 builder.Services.AddClassroomIdentity();
 
+// The shared, writable demo account (design.md §9.2): config-bound options, the seeder that builds its
+// rich state, and the scheduled job that re-seeds it. The job seeds once on boot, then on its interval.
+builder.Services.Configure<DemoAccountOptions>(builder.Configuration.GetSection(DemoAccountOptions.SectionName));
+builder.Services.AddScoped<DemoSeeder>();
+builder.Services.AddHostedService<DemoReseedService>();
+
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-XSRF-TOKEN";

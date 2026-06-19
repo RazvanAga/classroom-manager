@@ -25,6 +25,10 @@ public class ClassroomApiFactory : WebApplicationFactory<Program>, IAsyncLifetim
     public const string SeedPassword = "Passw0rd!";
     public const string SeedDisplayName = "Demo Teacher";
 
+    public const string DemoEmail = "demo@classroom.local";
+    public const string DemoPassword = "DemoPassw0rd!";
+    public const string DemoDisplayName = "Demo Teacher";
+
     private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:16-alpine")
         .Build();
 
@@ -42,6 +46,12 @@ public class ClassroomApiFactory : WebApplicationFactory<Program>, IAsyncLifetim
                 ["SeedTeacher:Email"] = SeedEmail,
                 ["SeedTeacher:Password"] = SeedPassword,
                 ["SeedTeacher:DisplayName"] = SeedDisplayName,
+                // Keep the demo account known to tests, but disable the background re-seed job so it
+                // never races other tests; DemoEndpointsTests drives the seeder explicitly instead.
+                ["DemoAccount:Enabled"] = "false",
+                ["DemoAccount:Email"] = DemoEmail,
+                ["DemoAccount:Password"] = DemoPassword,
+                ["DemoAccount:DisplayName"] = DemoDisplayName,
             });
         });
 

@@ -102,6 +102,46 @@ button {
   padding: 8px 12px;
 }
 
+.btn-ghost.full {
+  width: 100%;
+  border: 1px solid #e3def5;
+}
+
+.btn-ghost:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 22px 0 14px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e3def5;
+}
+
+.divider::before {
+  margin-right: 12px;
+}
+
+.divider::after {
+  margin-left: 12px;
+}
+
+.demo-hint {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
 .error {
   margin-top: 16px;
   color: var(--danger);

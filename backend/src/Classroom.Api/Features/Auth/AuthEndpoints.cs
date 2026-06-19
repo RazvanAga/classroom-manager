@@ -2,8 +2,10 @@ using System.Security.Claims;
 using Classroom.Api.Common.Authorization;
 using Classroom.Api.Common.Security;
 using Classroom.Api.Common.Validation;
+using Classroom.Api.Identity;
 using Classroom.Domain.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace Classroom.Api.Features.Auth;
 
@@ -18,6 +20,11 @@ public static class AuthEndpoints
             .AddEndpointFilter<ValidationFilter<LoginRequest>>()
             .AddEndpointFilter<AntiforgeryFilter>()
             .WithSummary("Sign in a seeded teacher and issue the auth cookie.");
+
+        group.MapPost("/demo-login", DemoLoginAsync)
+            .AllowAnonymous()
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithSummary("One-click sign-in to the shared, writable demo account.");
 
         group.MapPost("/logout", LogoutAsync)
             .RequireAuthorization()
@@ -58,6 +65,27 @@ public static class AuthEndpoints
             return InvalidCredentials();
         }
 
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> DemoLoginAsync(
+        SignInManager<ApplicationUser> signInManager,
+        UserManager<ApplicationUser> userManager,
+        IOptions<DemoAccountOptions> demoOptions)
+    {
+        // No credentials are taken from the caller: the demo identity is server-side config. Gating on
+        // the account's existence (not the master switch) means once seeded it's reachable; when the
+        // demo was never seeded — disabled feature, or before the boot-time seed lands — it 404s.
+        var demo = await userManager.FindByEmailAsync(demoOptions.Value.Email);
+        if (demo is null)
+        {
+            return Results.Problem(
+                title: "Demo unavailable",
+                detail: "The demo account is not available.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        await signInManager.SignInAsync(demo, isPersistent: true);
         return Results.NoContent();
     }
 
