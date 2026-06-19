@@ -30,7 +30,7 @@ HITL: requires Hetzner/DNS/secrets decisions and server access.
 
 ## Blocked by
 
-- All feature slices (#2–#16) — deploy when production-ready.
+- All feature slices (#2–#16) and the frontend redesign (#19–#27) — deploy when production-ready.
 
 ## Commit on completion
 
