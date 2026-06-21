@@ -16,6 +16,12 @@ public class Class
 
     public required string Name { get; set; }
 
+    /// <summary>
+    /// The reward-currency icon shown next to point totals (slice #19). Purely presentational;
+    /// defaults to <see cref="CurrencyIcon.Star"/> on creation and seed. Changeable by any member.
+    /// </summary>
+    public CurrencyIcon CurrencyIcon { get; set; } = CurrencyIcon.Star;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>Archived classes are excluded from the active list but remain in the database.</summary>

@@ -6,7 +6,7 @@ namespace Classroom.IntegrationTests.Features.Classes;
 
 public class ClassesEndpointsTests(ClassroomApiFactory factory) : IntegrationTestBase(factory)
 {
-    private record ClassDto(Guid Id, string Name, DateTime CreatedAt, bool IsArchived, string Role);
+    private record ClassDto(Guid Id, string Name, string CurrencyIcon, DateTime CreatedAt, bool IsArchived, string Role);
 
     private static string UniqueEmail() => $"teacher-{Guid.NewGuid():N}@classroom.local";
 
@@ -24,6 +24,13 @@ public class ClassesEndpointsTests(ClassroomApiFactory factory) : IntegrationTes
         var response = await client.GetAsync(uri);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<List<ClassDto>>())!;
+    }
+
+    private static async Task<ClassDto> GetClassAsync(HttpClient client, Guid id)
+    {
+        var response = await client.GetAsync($"/api/classes/{id}");
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<ClassDto>())!;
     }
 
     [Fact]
@@ -209,6 +216,68 @@ public class ClassesEndpointsTests(ClassroomApiFactory factory) : IntegrationTes
         var duplicate = await SendWithTokenAsync(client, HttpMethod.Post,
             $"/api/classes/{id}/teachers", new { email = collaboratorEmail, role = "Collaborator" });
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_new_class_defaults_to_the_star_currency_icon()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var id = await CreateClassAsync(client, "Default icon class");
+
+        var fromGet = await GetClassAsync(client, id);
+        Assert.Equal("Star", fromGet.CurrencyIcon);
+
+        var fromList = Assert.Single(await ListAsync(client), c => c.Id == id);
+        Assert.Equal("Star", fromList.CurrencyIcon);
+    }
+
+    [Fact]
+    public async Task A_member_can_change_the_currency_icon_to_an_allowed_value()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var id = await CreateClassAsync(client, "Recolorable class");
+
+        var change = await SendWithTokenAsync(client, HttpMethod.Put,
+            $"/api/classes/{id}/currency-icon", new { icon = "Gem" });
+        Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
+
+        var updated = await GetClassAsync(client, id);
+        Assert.Equal("Gem", updated.CurrencyIcon);
+    }
+
+    [Fact]
+    public async Task An_invalid_currency_icon_is_rejected()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var id = await CreateClassAsync(client, "Strict icon class");
+
+        var change = await SendWithTokenAsync(client, HttpMethod.Put,
+            $"/api/classes/{id}/currency-icon", new { icon = "banana" });
+        Assert.Equal(HttpStatusCode.BadRequest, change.StatusCode);
+
+        // The icon is unchanged after a rejected request.
+        var unchanged = await GetClassAsync(client, id);
+        Assert.Equal("Star", unchanged.CurrencyIcon);
+    }
+
+    [Fact]
+    public async Task A_non_member_cannot_change_the_currency_icon()
+    {
+        var ownerClient = CreateClient();
+        await LoginAsSeededTeacherAsync(ownerClient);
+        var id = await CreateClassAsync(ownerClient, "Icon-protected class");
+
+        var outsiderEmail = UniqueEmail();
+        await CreateTeacherAsync(outsiderEmail);
+        var outsiderClient = CreateClient();
+        await LoginAsync(outsiderClient, outsiderEmail, "Passw0rd!");
+
+        var change = await SendWithTokenAsync(outsiderClient, HttpMethod.Put,
+            $"/api/classes/{id}/currency-icon", new { icon = "Gem" });
+        Assert.Equal(HttpStatusCode.Forbidden, change.StatusCode);
     }
 
     [Fact]

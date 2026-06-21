@@ -31,6 +31,11 @@ public static class ClassesEndpoints
         group.MapGet("/{id:guid}", GetAsync)
             .WithSummary("Get a single class the current teacher belongs to.");
 
+        group.MapPut("/{id:guid}/currency-icon", ChangeCurrencyIconAsync)
+            .AddEndpointFilter<ValidationFilter<ChangeCurrencyIconRequest>>()
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithSummary("Change the reward-currency icon (any member); must be in the allowed set.");
+
         group.MapPost("/{id:guid}/archive", ArchiveAsync)
             .AddEndpointFilter<AntiforgeryFilter>()
             .WithSummary("Archive a class (any member); excludes it from the active list.");
@@ -95,6 +100,7 @@ public static class ClassesEndpoints
             .Select(c => new ClassResponse(
                 c.Id,
                 c.Name,
+                c.CurrencyIcon,
                 c.CreatedAt,
                 c.IsArchived,
                 c.Teachers.First(ct => ct.TeacherId == teacherId).Role))
@@ -120,12 +126,38 @@ public static class ClassesEndpoints
             .Select(c => new ClassResponse(
                 c.Id,
                 c.Name,
+                c.CurrencyIcon,
                 c.CreatedAt,
                 c.IsArchived,
                 c.Teachers.First(ct => ct.TeacherId == teacherId).Role))
             .FirstOrDefaultAsync();
 
         return response is null ? Forbidden() : Results.Ok(response);
+    }
+
+    private static async Task<IResult> ChangeCurrencyIconAsync(
+        Guid id,
+        ChangeCurrencyIconRequest request,
+        ClaimsPrincipal user,
+        ClassroomDbContext db,
+        IAuthorizationService authz)
+    {
+        // The icon is shared class config, so any member may change it (mirrors archive); cross-tenant
+        // change is denied by the membership requirement, which fails closed for kiosk principals too.
+        if (!await IsAuthorized(authz, user, id, new ClassMembershipRequirement()))
+        {
+            return Forbidden();
+        }
+
+        var target = await db.Classes.FirstOrDefaultAsync(c => c.Id == id);
+        if (target is null)
+        {
+            return Forbidden();
+        }
+
+        target.CurrencyIcon = request.Icon;
+        await db.SaveChangesAsync();
+        return Results.NoContent();
     }
 
     private static async Task<IResult> ArchiveAsync(
@@ -267,7 +299,7 @@ public static class ClassesEndpoints
     }
 
     private static ClassResponse ToResponse(Class entity, ClassRole role) =>
-        new(entity.Id, entity.Name, entity.CreatedAt, entity.IsArchived, role);
+        new(entity.Id, entity.Name, entity.CurrencyIcon, entity.CreatedAt, entity.IsArchived, role);
 
     private static IResult Forbidden() => Results.Problem(
         title: "Forbidden",

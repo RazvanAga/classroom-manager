@@ -14,6 +14,14 @@ public class ClassConfiguration : IEntityTypeConfiguration<Class>
             .IsRequired()
             .HasMaxLength(200);
 
+        // Reward-currency icon (slice #19): enum stored as a string (CLAUDE.md invariant), defaulting
+        // to "Star" so existing rows and new classes start with the default without explicit init.
+        builder.Property(c => c.CurrencyIcon)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired()
+            .HasDefaultValue(CurrencyIcon.Star);
+
         builder.HasMany(c => c.Teachers)
             .WithOne(ct => ct.Class)
             .HasForeignKey(ct => ct.ClassId)

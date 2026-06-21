@@ -7,8 +7,16 @@ public record CreateClassRequest(string Name);
 
 public record AddTeacherRequest(string Email, ClassRole? Role);
 
+public record ChangeCurrencyIconRequest(CurrencyIcon Icon);
+
 /// <summary>A class as seen by the current teacher; <see cref="Role"/> is their own role in it.</summary>
-public record ClassResponse(Guid Id, string Name, DateTime CreatedAt, bool IsArchived, ClassRole Role);
+public record ClassResponse(
+    Guid Id,
+    string Name,
+    CurrencyIcon CurrencyIcon,
+    DateTime CreatedAt,
+    bool IsArchived,
+    ClassRole Role);
 
 public class CreateClassRequestValidator : AbstractValidator<CreateClassRequest>
 {
@@ -24,5 +32,15 @@ public class AddTeacherRequestValidator : AbstractValidator<AddTeacherRequest>
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
         RuleFor(x => x.Role).IsInEnum().When(x => x.Role.HasValue);
+    }
+}
+
+public class ChangeCurrencyIconRequestValidator : AbstractValidator<ChangeCurrencyIconRequest>
+{
+    public ChangeCurrencyIconRequestValidator()
+    {
+        // Reject any value outside the fixed, curated set (slice #19). An unknown enum *name* is
+        // already rejected at JSON binding (400); this also guards out-of-range numeric values.
+        RuleFor(x => x.Icon).IsInEnum();
     }
 }
