@@ -63,6 +63,43 @@ export const ro = {
     placeholder: (name: string) => `„${name}” se construiește într-o felie următoare.`,
   },
 
+  dashboard: {
+    multiSelect: "Selectează mai mulți",
+    multiSelectDone: "Gata",
+    selected: (n: number) => (n === 1 ? "1 elev selectat" : `${n} elevi selectați`),
+    applyToSelected: "Acordă celor selectați",
+    wholeClass: "Toată clasa",
+    emptyRoster: "Încă niciun elev în această clasă.",
+    emptyRosterHint: "Adaugă elevi din Setări.",
+  },
+
+  leaderboard: {
+    title: "Clasament",
+    subtitle: "După total câștigat",
+    empty: "Încă fără activitate.",
+  },
+
+  award: {
+    available: "disponibile",
+    notePlaceholder: "Notă opțională…",
+    givePositive: "Acordă",
+    giveNegative: "Scade",
+    noBehaviors: "Niciun comportament definit. Adaugă-le din Setări.",
+    applyingTo: (n: number) => (n === 1 ? "1 elev" : `${n} elevi`),
+    saving: "Se aplică…",
+  },
+
+  recent: {
+    title: "Activitate recentă",
+    empty: "Nicio activitate încă.",
+    undo: "Anulează",
+    undoing: "Se anulează…",
+    undone: "Anulat",
+    purchase: "Cumpărare din magazin",
+    adjustment: "Ajustare manuală",
+    batch: (n: number) => (n === 1 ? "1 elev" : `${n} elevi`),
+  },
+
   common: {
     loading: "Se încarcă…",
     retry: "Reîncearcă",

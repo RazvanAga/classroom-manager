@@ -306,18 +306,21 @@ export type LeaderboardEntry = {
 };
 
 // Award (or deduct) a behavior to one or many students. The selected behavior's signed default
-// points decide the amount; selecting several students writes one row each sharing a batch id.
+// points decide the amount; selecting several students writes one row each sharing a batch id. An
+// optional note is stored verbatim on every row written.
 export async function awardBehavior(
   classId: string,
   studentIds: string[],
   behaviorId: string,
+  reason?: string,
 ): Promise<void> {
   const token = await antiforgeryToken();
+  const trimmed = reason?.trim();
   const res = await fetch(`/api/classes/${classId}/points/award`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
-    body: JSON.stringify({ studentIds, behaviorId }),
+    body: JSON.stringify({ studentIds, behaviorId, reason: trimmed || null }),
   });
   if (!res.ok) throw new Error(await problemMessage(res, "Could not award points."));
 }
