@@ -128,6 +128,53 @@ export const ro = {
     },
   },
 
+  groups: {
+    emptyRoster: "Încă niciun elev în această clasă.",
+    // Random student picker.
+    picker: {
+      title: "Alege un elev aleatoriu",
+      pick: "Alege!",
+      picking: "Se alege…",
+      placeholder: "Apasă „Alege!” ca să tragi la sorți.",
+      recent: "Ultimii aleși",
+      recentEmpty: "Niciun elev ales încă.",
+      cycleReset: "Toți elevii au fost aleși — runda a început din nou.",
+      reset: "Resetează runda",
+    },
+    // Group maker.
+    maker: {
+      title: "Împarte în grupuri",
+      groupSize: "Elevi pe grup",
+      balanceGender: "Echilibrează fete / băieți",
+      form: "Împarte!",
+      forming: "Se împarte…",
+      group: (n: number) => `Grupa ${n}`,
+      award: "Acordă",
+      members: (n: number) => (n === 1 ? "1 elev" : `${n} elevi`),
+      namePlaceholder: "Nume aranjament (opțional)",
+      save: "Salvează",
+      saving: "Se salvează…",
+      saved: "Aranjamente salvate",
+      savedEmpty: "Niciun aranjament salvat încă.",
+      reopen: "Deschide",
+      unnamed: "Fără nume",
+    },
+    // Activity timer.
+    timer: {
+      title: "Cronometru",
+      presets: "Preset-uri",
+      preset: (m: number) => `${m} min`,
+      custom: "Timp personalizat",
+      minutes: "min",
+      seconds: "sec",
+      start: "Start",
+      resume: "Continuă",
+      pause: "Pauză",
+      reset: "Reset",
+      expired: "Timp expirat!",
+    },
+  },
+
   common: {
     loading: "Se încarcă…",
     retry: "Reîncearcă",
