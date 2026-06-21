@@ -100,6 +100,34 @@ export const ro = {
     batch: (n: number) => (n === 1 ? "1 elev" : `${n} elevi`),
   },
 
+  shop: {
+    pickStudent: "Alege un elev pentru a-i deschide magazinul.",
+    back: "Înapoi la elevi",
+    available: "disponibile",
+    preview: "Avatarul lui",
+    equipped: "Echipat",
+    equip: "Echipează",
+    equipping: "Se echipează…",
+    buy: "Cumpără",
+    buying: "Se cumpără…",
+    insufficient: "Insuficient",
+    emptyRoster: "Încă niciun elev în această clasă.",
+    // Slot group headings (the locked DiceBear style's always-on layers).
+    slots: {
+      Hair: "Păr",
+      HairColor: "Culoare păr",
+      SkinColor: "Ten",
+      Eyes: "Ochi",
+      Mouth: "Gură",
+    },
+    rarity: {
+      Common: "Comun",
+      Rare: "Rar",
+      Epic: "Epic",
+      Legendary: "Legendar",
+    },
+  },
+
   common: {
     loading: "Se încarcă…",
     retry: "Reîncearcă",
