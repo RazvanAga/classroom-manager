@@ -36,12 +36,22 @@ public sealed class DemoSeeder(
 
     private readonly DemoAccountOptions _options = options.Value;
 
+    // The 24-student Romanian roster copied from the original prototype (slice #19), so every
+    // redesigned screen demos against realistic, localized data.
     private static readonly IReadOnlyList<(string Name, Gender Gender)> Roster =
     [
-        ("Ava", Gender.Female), ("Liam", Gender.Male), ("Sofia", Gender.Female),
-        ("Noah", Gender.Male), ("Mia", Gender.Female), ("Lucas", Gender.Male),
-        ("Emma", Gender.Female), ("Ethan", Gender.Male), ("Olivia", Gender.Female),
-        ("Mason", Gender.Male), ("Isabella", Gender.Female), ("James", Gender.Male),
+        ("Băncilă Amira", Gender.Female), ("Beju Matei Tudor", Gender.Male),
+        ("Bogdan Nicole Alexandra", Gender.Female), ("Căpraru Mihai", Gender.Male),
+        ("Ciucă Eva Maria", Gender.Female), ("Dancu Desyre", Gender.Female),
+        ("David Eric", Gender.Male), ("Falcusan Nicholas", Gender.Male),
+        ("Ghițescu Dragoș Valentin", Gender.Male), ("Goga Sara Ioana", Gender.Female),
+        ("Ienchi Deian Ioan", Gender.Male), ("Izvernari Vanessa Cataleea", Gender.Female),
+        ("Mârza Sofia", Gender.Female), ("Moldoveanu Rareș Andrei", Gender.Male),
+        ("Motre Alexandru", Gender.Male), ("Ostafe Sara Maria", Gender.Female),
+        ("Parasca David Andrei", Gender.Male), ("Prichici Ana Carolina", Gender.Female),
+        ("Ranjous Rayan", Gender.Male), ("Sperdea Amelia Andreea", Gender.Female),
+        ("Struna Vladimir", Gender.Male), ("Serban Selena", Gender.Female),
+        ("Todor Maria Antonia", Gender.Female), ("Văran Caius Andrei", Gender.Male),
     ];
 
     /// <summary>
@@ -137,8 +147,14 @@ public sealed class DemoSeeder(
         var rng = new Random(Seed);
         var now = DateTime.UtcNow;
 
-        // 1) The class, owned by the demo teacher, seeded with the default behavior catalog.
-        var klass = new Class { Name = "Room 12 — Demo Class", CreatedAt = now.AddDays(-45) };
+        // 1) The class, owned by the demo teacher, seeded with the default behavior catalog. Named
+        //    "Clasa Steluțelor" with the star currency icon — the redesign showcase (slice #19).
+        var klass = new Class
+        {
+            Name = "Clasa Steluțelor",
+            CurrencyIcon = CurrencyIcon.Star,
+            CreatedAt = now.AddDays(-45),
+        };
         klass.Teachers.Add(new ClassTeacher { TeacherId = teacherId, Role = ClassRole.Owner });
         db.Classes.Add(klass);
 

@@ -7,15 +7,18 @@ namespace Classroom.Domain.Behaviors;
 /// </summary>
 public static class DefaultBehaviors
 {
-    /// <summary>(Name, signed default points) — a mix of positive rewards and negative deductions.</summary>
+    /// <summary>
+    /// (Name, signed default points) — the curated Romanian default catalog (slice #19). A mix of
+    /// positive rewards and negative deductions; the UI is Romanian while code stays English.
+    /// </summary>
     public static readonly IReadOnlyList<(string Name, int DefaultPoints)> Template =
     [
-        ("Helped a peer", 2),
-        ("Great participation", 1),
-        ("On task", 1),
-        ("Teamwork", 1),
-        ("Off task", -1),
-        ("Disrupting class", -2),
+        ("s-a bătut cu un coleg", -3),
+        ("nu și-a făcut tema", -2),
+        ("a deranjat ora", -1),
+        ("a răspuns bine", 1),
+        ("a ajutat un coleg", 2),
+        ("a rezolvat o problemă dificilă", 3),
     ];
 
     /// <summary>Builds a fresh, unsaved <see cref="Behavior"/> per template entry for the given class.</summary>

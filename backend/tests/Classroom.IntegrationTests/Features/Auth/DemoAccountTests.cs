@@ -18,7 +18,7 @@ namespace Classroom.IntegrationTests.Features.Auth;
 public class DemoAccountTests(ClassroomApiFactory factory) : IntegrationTestBase(factory)
 {
     private record MeDto(Guid Id, string Email, string DisplayName);
-    private record ClassDto(Guid Id, string Name, DateTime CreatedAt, bool IsArchived, string Role);
+    private record ClassDto(Guid Id, string Name, string CurrencyIcon, DateTime CreatedAt, bool IsArchived, string Role);
     private record StudentDto(Guid Id, Guid ClassId, string DisplayName, string? Gender, DateTime CreatedAt);
     private record LeaderboardEntryDto(Guid StudentId, string DisplayName, int Wallet, int LifetimeEarned);
 
@@ -46,13 +46,17 @@ public class DemoAccountTests(ClassroomApiFactory factory) : IntegrationTestBase
         using var scope = Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClassroomDbContext>();
 
-        var classId = await db.ClassTeachers
-            .Where(ct => ct.TeacherId == teacherId && ct.Role == ClassRole.Owner)
-            .Select(ct => ct.ClassId)
+        var demoClass = await db.Classes
+            .Where(c => c.Teachers.Any(ct => ct.TeacherId == teacherId && ct.Role == ClassRole.Owner))
             .SingleAsync();
+        var classId = demoClass.Id;
+
+        // The redesign showcase (slice #19): "Clasa Steluțelor" with the star currency icon.
+        Assert.Equal("Clasa Steluțelor", demoClass.Name);
+        Assert.Equal(CurrencyIcon.Star, demoClass.CurrencyIcon);
 
         var studentIds = await db.Students.Where(s => s.ClassId == classId).Select(s => s.Id).ToListAsync();
-        Assert.Equal(12, studentIds.Count);
+        Assert.Equal(24, studentIds.Count);
 
         // Behavior catalog seeded; a varied, multi-row history; at least one student spent on avatars.
         Assert.Equal(6, await db.Behaviors.CountAsync(b => b.ClassId == classId));
@@ -60,9 +64,9 @@ public class DemoAccountTests(ClassroomApiFactory factory) : IntegrationTestBase
         Assert.True(await db.PointTransactions.AnyAsync(t =>
             studentIds.Contains(t.StudentId) && t.Type == PointTransactionType.Purchase));
 
-        // Owned items exceed the 5 free defaults per student (60), proving purchases were granted, and
-        // a saved grouping exists so the group-maker has something to show on arrival.
-        Assert.True(await db.StudentOwnedItems.CountAsync(o => studentIds.Contains(o.StudentId)) > 60);
+        // Owned items exceed the 5 free defaults per student (24 × 5 = 120), proving purchases were
+        // granted, and a saved grouping exists so the group-maker has something to show on arrival.
+        Assert.True(await db.StudentOwnedItems.CountAsync(o => studentIds.Contains(o.StudentId)) > 120);
         Assert.True(await db.Groupings.AnyAsync(g => g.ClassId == classId));
     }
 
@@ -96,15 +100,17 @@ public class DemoAccountTests(ClassroomApiFactory factory) : IntegrationTestBase
         // …and it can read the populated class and act in it (fully interactive — design.md §9.2).
         var classes = await client.GetFromJsonAsync<List<ClassDto>>("/api/classes");
         var demoClass = Assert.Single(classes!);
+        Assert.Equal("Clasa Steluțelor", demoClass.Name);
+        Assert.Equal("Star", demoClass.CurrencyIcon);
 
         var students = await client.GetFromJsonAsync<List<StudentDto>>(
             $"/api/classes/{demoClass.Id}/students");
-        Assert.Equal(12, students!.Count);
+        Assert.Equal(24, students!.Count);
 
         // The leaderboard is varied (some students lead), confirming the rich history landed.
         var leaderboard = await client.GetFromJsonAsync<List<LeaderboardEntryDto>>(
             $"/api/classes/{demoClass.Id}/leaderboard");
-        Assert.Equal(12, leaderboard!.Count);
+        Assert.Equal(24, leaderboard!.Count);
         Assert.True(leaderboard.Max(e => e.LifetimeEarned) > leaderboard.Min(e => e.LifetimeEarned));
     }
 
