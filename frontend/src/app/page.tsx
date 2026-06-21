@@ -1,57 +1,21 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-  createClass,
-  enterKiosk,
-  fetchClasses,
-  fetchKioskSession,
-  fetchMe,
-  logout,
-} from "@/lib/api";
-import { RosterPanel } from "./RosterPanel";
-import { BehaviorPanel } from "./BehaviorPanel";
-import { PointsPanel } from "./PointsPanel";
-import { PickerPanel } from "./PickerPanel";
-import { GroupsPanel } from "./GroupsPanel";
-import { ReportsPanel } from "./ReportsPanel";
-import { TimerPanel } from "./TimerPanel";
-import { KioskView } from "./KioskView";
+import { Plus, Star } from "lucide-react";
+import { useState } from "react";
+import { createClass, fetchClasses, fetchMe, logout } from "@/lib/api";
+import { ClassCard } from "@/components/ClassCard";
+import { ro } from "@/lib/strings";
 
-export default function HomePage() {
-  const router = useRouter();
+// The root page is the class selector (slice #20): the teacher's classes as cards, with create +
+// archive. Selecting a card routes into that class. Auth/kiosk gating is handled by <AuthGate>, so
+// this renders only for a signed-in teacher.
+export default function ClassSelectorPage() {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // A kiosk session takes over the whole app, so check for it first. While it loads we hold off on
-  // the teacher queries (and the login redirect) to avoid a flash of the wrong view.
-  const { data: kiosk, isLoading: kioskLoading } = useQuery({
-    queryKey: ["kioskSession"],
-    queryFn: fetchKioskSession,
-  });
-
-  const { data: me, isLoading: meLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: fetchMe,
-    enabled: !kioskLoading && !kiosk,
-  });
-  const isLoading = kioskLoading || (!kiosk && meLoading);
-
-  const { data: classes } = useQuery({
-    queryKey: ["classes"],
-    queryFn: fetchClasses,
-    enabled: !!me,
-  });
-
-  const enterKioskMutation = useMutation({
-    mutationFn: (classId: string) => enterKiosk(classId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kioskSession"] }),
-  });
-
-  const selected = classes?.find((c) => c.id === selectedId) ?? null;
+  const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
+  const { data: classes } = useQuery({ queryKey: ["classes"], queryFn: fetchClasses });
 
   const logoutMutation = useMutation({
     mutationFn: logout,
@@ -66,117 +30,68 @@ export default function HomePage() {
     },
   });
 
-  useEffect(() => {
-    if (!isLoading && !kiosk && me === null) {
-      router.replace("/login");
-    }
-  }, [isLoading, kiosk, me, router]);
-
-  if (kiosk) {
-    return <KioskView session={kiosk} />;
-  }
-
-  if (isLoading || !me) {
-    return (
-      <main className="shell">
-        <div className="card greeting">Loading…</div>
-      </main>
-    );
-  }
-
   return (
-    <main className="shell">
-      <div className="card wide">
-        <header className="row">
-          <div>
-            <h1>Classes</h1>
-            <p className="subtitle">
-              Signed in as <span className="name">{me.displayName}</span>
-            </p>
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 rotate-3 items-center justify-center rounded-2xl bg-yellow-400 shadow-md">
+            <Star size={26} className="fill-yellow-900 text-yellow-900" />
           </div>
-          <button
-            className="btn-ghost"
-            onClick={() => logoutMutation.mutate()}
-            disabled={logoutMutation.isPending}
-          >
-            {logoutMutation.isPending ? "Signing out…" : "Sign out"}
-          </button>
-        </header>
-
-        <form
-          className="create-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (name.trim()) createMutation.mutate();
-          }}
-        >
-          <input
-            aria-label="New class name"
-            placeholder="New class name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <button
-            className="btn-primary inline"
-            type="submit"
-            disabled={createMutation.isPending || !name.trim()}
-          >
-            {createMutation.isPending ? "Adding…" : "Add"}
-          </button>
-        </form>
-
-        {createMutation.isError && (
-          <p className="error">{(createMutation.error as Error).message}</p>
-        )}
-
-        {classes && classes.length > 0 ? (
-          <ul className="class-list">
-            {classes.map((c) => (
-              <li
-                key={c.id}
-                className={`class-item selectable${c.id === selectedId ? " selected" : ""}`}
-                onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setSelectedId(c.id === selectedId ? null : c.id);
-                  }
-                }}
-              >
-                <span className="class-name">{c.name}</span>
-                <span className="role-tag">{c.role}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="empty">No classes yet — create your first one above.</p>
-        )}
-
-        {selected && (
-          <div className="kiosk-launch">
-            <button
-              className="btn-ghost"
-              onClick={() => enterKioskMutation.mutate(selected.id)}
-              disabled={enterKioskMutation.isPending}
-            >
-              {enterKioskMutation.isPending ? "Entering…" : `Enter kiosk mode for ${selected.name}`}
-            </button>
-            {enterKioskMutation.isError && (
-              <p className="error">{(enterKioskMutation.error as Error).message}</p>
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight">{ro.classes.title}</h1>
+            {me && (
+              <p className="text-sm text-slate-500">
+                {ro.classes.signedInAs} <span className="font-semibold text-violet-700">{me.displayName}</span>
+              </p>
             )}
           </div>
-        )}
+        </div>
+        <button
+          type="button"
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+          className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
+        >
+          {logoutMutation.isPending ? ro.auth.signingOut : ro.auth.signOut}
+        </button>
+      </header>
 
-        {selected && <RosterPanel klass={selected} />}
-        {selected && <BehaviorPanel classId={selected.id} />}
-        {selected && <PointsPanel classId={selected.id} />}
-        {selected && <ReportsPanel classId={selected.id} />}
-        {selected && <PickerPanel classId={selected.id} />}
-        {selected && <GroupsPanel classId={selected.id} />}
-        {selected && <TimerPanel />}
-      </div>
+      <form
+        className="mt-8 flex gap-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (name.trim()) createMutation.mutate();
+        }}
+      >
+        <input
+          aria-label={ro.classes.newClassPlaceholder}
+          placeholder={ro.classes.newClassPlaceholder}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-lg outline-none focus:border-violet-400"
+        />
+        <button
+          type="submit"
+          disabled={createMutation.isPending || !name.trim()}
+          className="flex shrink-0 items-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-lg font-bold text-white shadow-lg shadow-violet-600/30 transition hover:bg-violet-700 disabled:opacity-50"
+        >
+          <Plus size={20} />
+          <span className="hidden sm:inline">{createMutation.isPending ? ro.classes.adding : ro.classes.add}</span>
+        </button>
+      </form>
+      {createMutation.isError && (
+        <p className="mt-3 text-sm font-medium text-rose-600">{(createMutation.error as Error).message}</p>
+      )}
+
+      {classes && classes.length > 0 ? (
+        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {classes.map((c) => (
+            <ClassCard key={c.id} klass={c} />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-12 text-center text-lg text-slate-400">{ro.classes.empty}</p>
+      )}
     </main>
   );
 }

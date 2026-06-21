@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
+import { AuthGate } from "@/components/AuthGate";
+import { ro } from "@/lib/strings";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Classroom Manager",
-  description: "Track classes, award behavior points, and run your classroom day.",
+  title: ro.appName,
+  description: "Gestionează clase, acordă puncte de comportament și condu-ți ziua la clasă.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <Providers>{children}</Providers>
+    <html lang="ro" className="h-full">
+      <body className="min-h-full">
+        <Providers>
+          <AuthGate>{children}</AuthGate>
+        </Providers>
       </body>
     </html>
   );

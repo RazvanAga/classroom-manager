@@ -1,6 +1,8 @@
 // Thin API client. Same-origin (dev proxy / prod Nginx), so the auth cookie rides along and
 // mutations carry the double-submit antiforgery token from /api/antiforgery/token.
 
+import type { CurrencyIcon } from "./currency";
+
 export type Me = { id: string; email: string; displayName: string };
 
 type ProblemDetails = { title?: string; detail?: string };
@@ -60,6 +62,7 @@ export type ClassRole = "Owner" | "Collaborator";
 export type ClassSummary = {
   id: string;
   name: string;
+  currencyIcon: CurrencyIcon;
   createdAt: string;
   isArchived: boolean;
   role: ClassRole;
@@ -69,6 +72,29 @@ export async function fetchClasses(): Promise<ClassSummary[]> {
   const res = await fetch("/api/classes", { credentials: "include" });
   if (!res.ok) throw new Error("Failed to load classes.");
   return res.json();
+}
+
+// Archive a class (any member): it leaves the active list but stays in the database (history kept).
+export async function archiveClass(classId: string): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/archive`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-XSRF-TOKEN": token },
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not archive the class."));
+}
+
+// Change a class's reward-currency icon (any member); the value must be in the fixed allowed set.
+export async function setCurrencyIcon(classId: string, icon: CurrencyIcon): Promise<void> {
+  const token = await antiforgeryToken();
+  const res = await fetch(`/api/classes/${classId}/currency-icon`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify({ icon }),
+  });
+  if (!res.ok) throw new Error(await problemMessage(res, "Could not change the currency icon."));
 }
 
 export async function createClass(name: string): Promise<ClassSummary> {
