@@ -71,13 +71,18 @@ public sealed class DemoSeeder(
 
     /// <summary>
     /// Ensures the demo teacher exists (idempotent), returning it. Pre-confirmed and given a kiosk PIN
-    /// so the demo is fully interactive out of the box (no SMTP in v1; design.md §5.2).
+    /// so the demo is fully interactive out of the box (no SMTP in v1; design.md §5.2). The kiosk PIN is
+    /// reconciled to the configured value on every call: it is not part of the per-reseed class wipe, so
+    /// without this it would be frozen at whatever it was first created with (or whatever a demo visitor
+    /// changed it to via Settings) — and the documented demo PIN would silently stop working.
     /// </summary>
     public async Task<ApplicationUser> EnsureDemoTeacherAsync(CancellationToken cancellationToken = default)
     {
         var existing = await users.FindByEmailAsync(_options.Email);
         if (existing is not null)
         {
+            existing.KioskPinHash = pinHasher.HashPassword(existing, _options.KioskPin);
+            await users.UpdateAsync(existing);
             return existing;
         }
 

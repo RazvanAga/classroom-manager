@@ -2,9 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using Classroom.Api.Identity;
 using Classroom.Domain.Classes;
+using Classroom.Domain.Identity;
 using Classroom.Domain.Points;
 using Classroom.Infrastructure.Persistence;
 using Classroom.IntegrationTests.Infrastructure;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -82,6 +84,43 @@ public class DemoAccountTests(ClassroomApiFactory factory) : IntegrationTestBase
 
         // Exactly one demo class survives — the second reset wiped the first, not stacked on it.
         Assert.Equal(1, await db.ClassTeachers.CountAsync(ct => ct.TeacherId == teacherId));
+    }
+
+    [Fact]
+    public async Task Reseed_restores_the_configured_kiosk_pin_even_after_it_drifts()
+    {
+        // First reseed creates the demo teacher with the configured PIN (1234 in the harness).
+        await ReseedDemoAsync();
+
+        // Simulate drift: a demo visitor changed the PIN via Settings (or the account was first created
+        // under a different config). The class wipe never touches the teacher's PIN.
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClassroomDbContext>();
+            var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<ApplicationUser>>();
+            var teacher = await db.Users.SingleAsync(u => u.Email == ClassroomApiFactory.DemoEmail);
+            teacher.KioskPinHash = hasher.HashPassword(teacher, "999999");
+            await db.SaveChangesAsync();
+        }
+
+        // The reseed must reconcile the PIN back to the configured value.
+        await ReseedDemoAsync();
+
+        var client = CreateClient();
+        await SendWithTokenAsync(client, HttpMethod.Post, "/api/auth/demo-login");
+        var classes = await client.GetFromJsonAsync<List<ClassDto>>("/api/classes");
+        var demoClass = Assert.Single(classes!);
+
+        var enter = await SendWithTokenAsync(client, HttpMethod.Post, "/api/kiosk/enter",
+            new { classId = demoClass.Id });
+        enter.EnsureSuccessStatusCode();
+
+        // The drifted "999999" no longer works; the configured "1234" exits cleanly.
+        var wrong = await SendWithTokenAsync(client, HttpMethod.Post, "/api/kiosk/exit", new { pin = "999999" });
+        Assert.Equal(HttpStatusCode.Forbidden, wrong.StatusCode);
+
+        var right = await SendWithTokenAsync(client, HttpMethod.Post, "/api/kiosk/exit", new { pin = "1234" });
+        Assert.Equal(HttpStatusCode.NoContent, right.StatusCode);
     }
 
     [Fact]
