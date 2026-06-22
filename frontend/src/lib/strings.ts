@@ -58,11 +58,6 @@ export const ro = {
     wrongPin: "PIN incorect.",
   },
 
-  sections: {
-    // Placeholder copy for the five section pages; later slices replace each page's body.
-    placeholder: (name: string) => `„${name}” se construiește într-o felie următoare.`,
-  },
-
   dashboard: {
     multiSelect: "Selectează mai mulți",
     multiSelectDone: "Gata",
@@ -214,6 +209,89 @@ export const ro = {
         Purchase: "Cumpărare din magazin",
         Adjustment: "Ajustare manuală",
       },
+    },
+  },
+
+  settings: {
+    // Setări (issue #26): the unified per-class administration page — roster, behavior catalog,
+    // currency icon, kiosk PIN, student purge (Owner only) and class archiving.
+    roster: {
+      title: "Elevi",
+      subtitle: "Adaugă, importă și scoate elevi din clasă.",
+      count: (n: number) => (n === 1 ? "1 elev" : `${n} elevi`),
+      namePlaceholder: "Numele elevului",
+      genderUnset: "Gen?",
+      genderGirl: "Fată",
+      genderBoy: "Băiat",
+      add: "Adaugă",
+      adding: "Se adaugă…",
+      bulkToggle: "Adaugă mai mulți",
+      bulkPlaceholder: "Câte un elev pe rând:\nMaria Pop, F\nAndrei Ionescu, M\nDavid",
+      bulkHint: "Un elev pe rând. Opțional, adaugă „, F” sau „, M” pentru gen.",
+      bulkAdd: "Adaugă lista",
+      bulkAdding: "Se adaugă…",
+      empty: "Niciun elev în această clasă încă.",
+      remove: "Scoate din clasă",
+      removeConfirmTitle: "Scoți elevul din clasă?",
+      removeConfirmMessage: (name: string) =>
+        `„${name}” va fi scos din clasă. Istoricul lui se păstrează și poate fi readus.`,
+      removeConfirm: "Scoate",
+      removing: "Se scoate…",
+      purge: "Șterge definitiv",
+    },
+    purge: {
+      title: "Ștergere definitivă",
+      message: (name: string) =>
+        `Datele lui „${name}” (nume, avatar, inventar) vor fi șterse definitiv, iar istoricul de puncte va fi anonimizat. Această acțiune NU poate fi anulată.`,
+      typeHint: (word: string) => `Scrie „${word}” pentru a confirma.`,
+      confirmWord: "ȘTERGE",
+      confirm: "Șterge definitiv",
+      purging: "Se șterge…",
+    },
+    behaviors: {
+      title: "Comportamente",
+      subtitle: "Recompensele și penalizările pe care le acorzi clasei.",
+      count: (n: number) => (n === 1 ? "1 comportament" : `${n} comportamente`),
+      namePlaceholder: "Nume comportament",
+      pointsPlaceholder: "Puncte",
+      add: "Adaugă",
+      adding: "Se adaugă…",
+      edit: "Editează",
+      save: "Salvează",
+      saving: "Se salvează…",
+      cancel: "Anulează",
+      empty: "Niciun comportament definit încă.",
+      remove: "Șterge",
+      removeConfirmTitle: "Ștergi comportamentul?",
+      removeConfirmMessage: (name: string) => `Comportamentul „${name}” va fi șters din catalog.`,
+      removeConfirm: "Șterge",
+      removing: "Se șterge…",
+      pointsHint: "Folosește o valoare negativă pentru penalizări.",
+    },
+    currency: {
+      title: "Monedă recompensă",
+      subtitle: "Iconița afișată pentru puncte în toată clasa.",
+      saving: "Se salvează…",
+    },
+    pin: {
+      title: "PIN chioșc",
+      subtitle: "Codul cu care ieși din modul chioșc.",
+      placeholder: "PIN (4–6 cifre)",
+      save: "Salvează PIN-ul",
+      saving: "Se salvează…",
+      saved: "PIN salvat.",
+      hint: "Între 4 și 6 cifre.",
+    },
+    danger: {
+      title: "Zonă periculoasă",
+      archiveTitle: "Arhivează clasa",
+      archiveHint: "Clasa dispare din listă, dar istoricul se păstrează.",
+      archive: "Arhivează",
+      archiving: "Se arhivează…",
+      archiveConfirmTitle: "Arhivezi clasa?",
+      archiveConfirmMessage:
+        "Clasa va dispărea din lista ta. Istoricul se păstrează, dar nu o mai poți deschide din aplicație.",
+      archiveConfirm: "Arhivează",
     },
   },
 
