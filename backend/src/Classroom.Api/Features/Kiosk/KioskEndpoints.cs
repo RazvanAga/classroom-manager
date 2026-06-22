@@ -57,7 +57,7 @@ public static class KioskEndpoints
 
         var klass = await db.Classes
             .Where(c => c.Id == request.ClassId)
-            .Select(c => new { c.Id, c.Name })
+            .Select(c => new { c.Id, c.Name, c.CurrencyIcon })
             .FirstOrDefaultAsync();
         if (klass is null)
         {
@@ -84,7 +84,7 @@ public static class KioskEndpoints
             new ClaimsPrincipal(identity),
             new AuthenticationProperties { IsPersistent = true });
 
-        return Results.Ok(new KioskSessionResponse(klass.Id, klass.Name));
+        return Results.Ok(new KioskSessionResponse(klass.Id, klass.Name, klass.CurrencyIcon));
     }
 
     private static async Task<IResult> ExitAsync(
@@ -154,7 +154,7 @@ public static class KioskEndpoints
 
         var klass = await db.Classes
             .Where(c => c.Id == classId)
-            .Select(c => new KioskSessionResponse(c.Id, c.Name))
+            .Select(c => new KioskSessionResponse(c.Id, c.Name, c.CurrencyIcon))
             .FirstOrDefaultAsync();
 
         return klass is null ? Forbidden() : Results.Ok(klass);

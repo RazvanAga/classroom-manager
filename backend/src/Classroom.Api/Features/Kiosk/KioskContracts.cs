@@ -1,3 +1,4 @@
+using Classroom.Domain.Classes;
 using Classroom.Domain.Identity;
 using FluentValidation;
 
@@ -9,8 +10,11 @@ public record EnterKioskRequest(Guid ClassId);
 /// <summary>Body for exiting kiosk mode (and for setting the PIN): the numeric PIN.</summary>
 public record KioskPinRequest(string Pin);
 
-/// <summary>The current kiosk session, for the kiosk UI's header.</summary>
-public record KioskSessionResponse(Guid ClassId, string ClassName);
+/// <summary>
+/// The current kiosk session. Carries the class currency icon so the kid-facing kiosk can render
+/// stars without the teacher-only /api/classes endpoint (unreachable for the kiosk principal).
+/// </summary>
+public record KioskSessionResponse(Guid ClassId, string ClassName, CurrencyIcon CurrencyIcon);
 
 public class EnterKioskRequestValidator : AbstractValidator<EnterKioskRequest>
 {

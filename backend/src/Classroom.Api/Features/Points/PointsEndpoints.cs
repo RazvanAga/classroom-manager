@@ -166,7 +166,9 @@ public static class PointsEndpoints
         ClassroomDbContext db,
         IAuthorizationService authz)
     {
-        if (!await IsMember(authz, user, classId))
+        // Read-only leaderboard is reachable in kiosk (design.md §5.4): the kid-facing kiosk shows an
+        // understated all-time ranking and reads per-student wallets for the avatar grid from here.
+        if (!await IsKioskOrMember(authz, user, classId))
         {
             return Forbidden();
         }
@@ -315,6 +317,13 @@ public static class PointsEndpoints
         IAuthorizationService authz, ClaimsPrincipal user, Guid classId)
     {
         var result = await authz.AuthorizeAsync(user, classId, new ClassMembershipRequirement());
+        return result.Succeeded;
+    }
+
+    private static async Task<bool> IsKioskOrMember(
+        IAuthorizationService authz, ClaimsPrincipal user, Guid classId)
+    {
+        var result = await authz.AuthorizeAsync(user, classId, new KioskOrMemberRequirement());
         return result.Succeeded;
     }
 

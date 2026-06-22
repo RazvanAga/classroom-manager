@@ -13,10 +13,11 @@ public class KioskEndpointsTests(ClassroomApiFactory factory) : IntegrationTestB
 {
     private record ClassDto(Guid Id, string Name, DateTime CreatedAt, bool IsArchived, string Role);
     private record StudentDto(Guid Id, Guid ClassId, string DisplayName, string? Gender, DateTime CreatedAt);
-    private record KioskSessionDto(Guid ClassId, string ClassName);
+    private record KioskSessionDto(Guid ClassId, string ClassName, string CurrencyIcon);
     private record StoreItemDto(
         Guid Id, string Slot, string OptionValue, string DisplayName, int Cost, string? Rarity, bool Affordable);
     private record StoreDto(Guid StudentId, int Wallet, string Style, List<StoreItemDto> Items);
+    private record LeaderboardEntryDto(Guid StudentId, string DisplayName, int Wallet, int LifetimeEarned);
 
     // The seeded teacher's default kiosk PIN (SeedData default; the factory doesn't override it).
     private const string SeededPin = "1234";
@@ -63,6 +64,8 @@ public class KioskEndpointsTests(ClassroomApiFactory factory) : IntegrationTestB
         var session = await EnterKioskAsync(client, classId);
         Assert.Equal(classId, session.ClassId);
         Assert.Equal("Kiosk class", session.ClassName);
+        // The session carries the class currency icon so the kid-facing kiosk can render stars.
+        Assert.Equal("Star", session.CurrencyIcon);
 
         // The kiosk session describes itself…
         var me = await client.GetAsync("/api/kiosk/me");
@@ -107,6 +110,24 @@ public class KioskEndpointsTests(ClassroomApiFactory factory) : IntegrationTestB
         var equip = await SendWithTokenAsync(client, HttpMethod.Put,
             $"/api/classes/{classId}/students/{studentId}/avatar/{item.Slot}", new { itemId = item.Id });
         Assert.Equal(HttpStatusCode.OK, equip.StatusCode);
+    }
+
+    [Fact]
+    public async Task Kiosk_can_read_the_leaderboard_for_its_own_class()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var classId = await CreateClassAsync(client, "Leaderboard class");
+        var studentId = await AddStudentAsync(client, classId, "Carol");
+        await GivePointsAsync(client, classId, studentId, 42);
+
+        await EnterKioskAsync(client, classId);
+
+        // The understated read-only leaderboard (and per-student wallets behind the grid) is reachable.
+        var response = await client.GetAsync($"/api/classes/{classId}/leaderboard");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var entries = (await response.Content.ReadFromJsonAsync<List<LeaderboardEntryDto>>())!;
+        Assert.Contains(entries, e => e.StudentId == studentId && e.Wallet == 42);
     }
 
     [Fact]
@@ -168,6 +189,8 @@ public class KioskEndpointsTests(ClassroomApiFactory factory) : IntegrationTestB
             (await client.GetAsync($"/api/classes/{classB}/students")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden,
             (await client.GetAsync($"/api/classes/{classB}/students/{studentB}/store")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await client.GetAsync($"/api/classes/{classB}/leaderboard")).StatusCode);
     }
 
     [Fact]

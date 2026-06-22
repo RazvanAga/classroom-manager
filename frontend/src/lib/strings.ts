@@ -52,10 +52,20 @@ export const ro = {
     badge: "Mod chioșc",
     heading: "Mod chioșc activ",
     description: "Elevii își pot vedea magazinul și avatarul. Acțiunile profesorului sunt blocate.",
-    exit: "Ieși din chioșc",
+    // The kid-facing kiosk redesign (issue #27): a large avatar grid, a tapped student's personal area
+    // (stars + avatar + shop) and an understated read-only leaderboard.
+    pickStudent: "Atinge-ți poza ca să-ți vezi steluțele și magazinul.",
+    emptyRoster: "Încă niciun elev în această clasă.",
+    leaderboardTitle: "Clasament",
+    leaderboardSubtitle: "După total câștigat",
+    backToGrid: "Înapoi la clasă",
+    exit: "Ieși",
+    exitTitle: "Ieși din modul chioșc",
+    exitHint: "Introdu PIN-ul profesorului pentru a reveni.",
     exiting: "Se iese…",
     pinPlaceholder: "PIN",
     wrongPin: "PIN incorect.",
+    cancel: "Anulează",
   },
 
   dashboard: {

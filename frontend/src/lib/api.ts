@@ -116,7 +116,7 @@ export async function createClass(name: string): Promise<ClassSummary> {
 
 // A reduced-scope kiosk session scoped to one class (design.md §5.4). Students shop/equip; teacher
 // admin actions are rejected server-side. Exiting needs the teacher's PIN.
-export type KioskSession = { classId: string; className: string };
+export type KioskSession = { classId: string; className: string; currencyIcon: CurrencyIcon };
 
 // Returns the current kiosk session, or null when not in kiosk mode (403/404).
 export async function fetchKioskSession(): Promise<KioskSession | null> {
