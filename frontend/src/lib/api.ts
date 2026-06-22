@@ -554,6 +554,46 @@ export async function fetchBehaviorBreakdown(
   return res.json();
 }
 
+export type PointTransactionType = "Award" | "Deduction" | "Purchase" | "Adjustment";
+
+// One row of a student's history, including its note (reason) so a teacher sees *why* points moved.
+// Voided rows are included (the list is an audit trail, not an aggregation) and marked via voidedAt.
+export type StudentHistoryItem = {
+  id: string;
+  amount: number;
+  type: PointTransactionType;
+  behaviorId: string | null;
+  behaviorName: string | null;
+  reason: string | null;
+  createdAt: string;
+  voidedAt: string | null;
+};
+
+export type StudentHistory = {
+  studentId: string;
+  displayName: string;
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  items: StudentHistoryItem[];
+};
+
+export async function fetchStudentHistory(
+  classId: string,
+  studentId: string,
+  page = 1,
+  pageSize = 20,
+): Promise<StudentHistory> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  const res = await fetch(
+    `/api/classes/${classId}/reports/students/${studentId}/history?${params}`,
+    { credentials: "include" },
+  );
+  if (!res.ok) throw new Error(await problemMessage(res, "Failed to load the history."));
+  return res.json();
+}
+
 // --- Avatars ---
 
 // The always-on layers of the locked DiceBear style (mirrors the backend AvatarSlot enum).

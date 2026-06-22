@@ -24,6 +24,13 @@ public class ReportingEndpointsTests(ClassroomApiFactory factory) : IntegrationT
         DateOnly From, DateOnly To, int TotalAwarded, int TotalDeducted,
         int NetPoints, int AwardCount, List<BehaviorStatDto> Behaviors);
 
+    private record HistoryItemDto(
+        Guid Id, int Amount, string Type, Guid? BehaviorId, string? BehaviorName,
+        string? Reason, DateTime CreatedAt, DateTime? VoidedAt);
+    private record HistoryDto(
+        Guid StudentId, string DisplayName, int Page, int PageSize,
+        int TotalCount, int TotalPages, List<HistoryItemDto> Items);
+
     private static string UniqueEmail() => $"teacher-{Guid.NewGuid():N}@classroom.local";
 
     private static async Task<Guid> CreateClassAsync(HttpClient client, string name)
@@ -265,6 +272,123 @@ public class ReportingEndpointsTests(ClassroomApiFactory factory) : IntegrationT
 
         Assert.Empty(breakdown.Behaviors);
         Assert.Equal(0, breakdown.AwardCount);
+    }
+
+    [Fact]
+    public async Task History_returns_rows_newest_first_with_their_notes()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var classId = await CreateClassAsync(client, "History class");
+        var studentId = await AddStudentAsync(client, classId, "Hana");
+        var reward = await AddBehaviorAsync(client, classId, "Helped a peer", 5);
+
+        await AwardAsync(client, classId, studentId, reward.Id);
+        // A manual adjustment carries a free-text note explaining *why* — the point of the history view.
+        await SendWithTokenAsync(client, HttpMethod.Post, $"/api/classes/{classId}/points/award",
+            new { studentIds = new[] { studentId }, amount = 3, reason = "Bonus pentru voluntariat" });
+
+        var response = await client.GetAsync(
+            $"/api/classes/{classId}/reports/students/{studentId}/history");
+        response.EnsureSuccessStatusCode();
+        var history = (await response.Content.ReadFromJsonAsync<HistoryDto>())!;
+
+        Assert.Equal(2, history.TotalCount);
+        Assert.Equal(2, history.Items.Count);
+        // Newest first: the adjustment was written after the award.
+        Assert.Equal("Bonus pentru voluntariat", history.Items[0].Reason);
+        Assert.Equal(3, history.Items[0].Amount);
+        Assert.Equal("Adjustment", history.Items[0].Type);
+        Assert.Equal("Helped a peer", history.Items[1].BehaviorName);
+        Assert.Equal(5, history.Items[1].Amount);
+    }
+
+    [Fact]
+    public async Task History_paginates_and_reports_totals()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var classId = await CreateClassAsync(client, "Paged history");
+        var studentId = await AddStudentAsync(client, classId, "Pavel");
+
+        // Stamp distinct timestamps so the newest-first order is unambiguous across pages.
+        for (var i = 0; i < 5; i++)
+        {
+            await WriteRowAsync(studentId, i + 1, PointTransactionType.Adjustment,
+                new DateTime(2026, 6, 10, 9, 0, 0, DateTimeKind.Utc).AddMinutes(i));
+        }
+
+        var first = await client.GetAsync(
+            $"/api/classes/{classId}/reports/students/{studentId}/history?page=1&pageSize=2");
+        first.EnsureSuccessStatusCode();
+        var page1 = (await first.Content.ReadFromJsonAsync<HistoryDto>())!;
+
+        Assert.Equal(5, page1.TotalCount);
+        Assert.Equal(3, page1.TotalPages); // ceil(5 / 2)
+        Assert.Equal(2, page1.Items.Count);
+        Assert.Equal(5, page1.Items[0].Amount); // newest (largest timestamp) first
+
+        var third = await client.GetAsync(
+            $"/api/classes/{classId}/reports/students/{studentId}/history?page=3&pageSize=2");
+        third.EnsureSuccessStatusCode();
+        var page3 = (await third.Content.ReadFromJsonAsync<HistoryDto>())!;
+
+        Assert.Single(page3.Items); // the trailing odd row
+        Assert.Equal(1, page3.Items[0].Amount); // oldest last
+    }
+
+    [Fact]
+    public async Task History_includes_voided_rows_as_a_full_audit_trail()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var classId = await CreateClassAsync(client, "Audit history");
+        var studentId = await AddStudentAsync(client, classId, "Vera");
+        var reward = await AddBehaviorAsync(client, classId, "Teamwork", 4);
+
+        await WriteRowAsync(studentId, 4, PointTransactionType.Award,
+            new DateTime(2026, 6, 10, 9, 0, 0, DateTimeKind.Utc), reward.Id,
+            voidedAt: new DateTime(2026, 6, 10, 11, 0, 0, DateTimeKind.Utc));
+
+        var response = await client.GetAsync(
+            $"/api/classes/{classId}/reports/students/{studentId}/history");
+        response.EnsureSuccessStatusCode();
+        var history = (await response.Content.ReadFromJsonAsync<HistoryDto>())!;
+
+        var item = Assert.Single(history.Items); // voided rows still appear (unlike the aggregations)
+        Assert.NotNull(item.VoidedAt);
+    }
+
+    [Fact]
+    public async Task History_for_a_student_in_another_class_is_not_found()
+    {
+        var client = CreateClient();
+        await LoginAsSeededTeacherAsync(client);
+        var classA = await CreateClassAsync(client, "Class A");
+        var classB = await CreateClassAsync(client, "Class B");
+        var studentInB = await AddStudentAsync(client, classB, "Outsider");
+
+        var response = await client.GetAsync(
+            $"/api/classes/{classA}/reports/students/{studentInB}/history");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_non_member_cannot_view_a_students_history()
+    {
+        var ownerClient = CreateClient();
+        await LoginAsSeededTeacherAsync(ownerClient);
+        var classId = await CreateClassAsync(ownerClient, "Private history");
+        var studentId = await AddStudentAsync(ownerClient, classId, "Alice");
+
+        var outsiderEmail = UniqueEmail();
+        await CreateTeacherAsync(outsiderEmail);
+        var outsiderClient = CreateClient();
+        await LoginAsync(outsiderClient, outsiderEmail, "Passw0rd!");
+
+        var response = await outsiderClient.GetAsync(
+            $"/api/classes/{classId}/reports/students/{studentId}/history");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]

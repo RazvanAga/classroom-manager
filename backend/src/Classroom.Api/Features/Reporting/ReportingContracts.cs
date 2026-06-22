@@ -1,3 +1,4 @@
+using Classroom.Domain.Points;
 using Classroom.Domain.Reporting;
 
 namespace Classroom.Api.Features.Reporting;
@@ -35,3 +36,35 @@ public record BehaviorBreakdownResponse(
     int NetPoints,
     int AwardCount,
     IReadOnlyList<BehaviorStat> Behaviors);
+
+/// <summary>
+/// One row of a student's transaction history (design.md §9.3): the signed <see cref="Amount"/>, its
+/// <see cref="Type"/>, the behavior it came from (when behavior-driven), the free-text
+/// <see cref="Reason"/> note explaining <i>why</i>, and <see cref="VoidedAt"/> so an undone row reads
+/// as struck-through rather than vanishing. Unlike the timeline/breakdown aggregations, the history
+/// lists every row — voided ones included — so the audit trail stays complete.
+/// </summary>
+public record StudentHistoryItem(
+    Guid Id,
+    int Amount,
+    PointTransactionType Type,
+    Guid? BehaviorId,
+    string? BehaviorName,
+    string? Reason,
+    DateTime CreatedAt,
+    DateTime? VoidedAt);
+
+/// <summary>
+/// A page of a student's transaction history, most-recent-first. The class-wide activity feed is
+/// capped and not per-student, so this paginated endpoint backs the student profile's full history.
+/// <see cref="TotalPages"/> is derived from <see cref="TotalCount"/>/<see cref="PageSize"/> so the UI
+/// knows when to stop paging.
+/// </summary>
+public record StudentHistoryResponse(
+    Guid StudentId,
+    string DisplayName,
+    int Page,
+    int PageSize,
+    int TotalCount,
+    int TotalPages,
+    IReadOnlyList<StudentHistoryItem> Items);

@@ -175,6 +175,48 @@ export const ro = {
     },
   },
 
+  reports: {
+    // Class reports: per-class behavior breakdown + a student picker that opens a profile.
+    pickStudent: "Alege un elev pentru profilul lui detaliat.",
+    back: "Înapoi la rapoarte",
+    emptyRoster: "Încă niciun elev în această clasă.",
+    rangeLabel: "ultimele 30 de zile",
+    breakdown: {
+      title: "Comportamente",
+      subtitle: "ultimele 30 de zile",
+      empty: "Niciun comportament înregistrat în această perioadă.",
+      awarded: "Acordat",
+      deducted: "Scăzut",
+      net: "Net",
+      times: (n: number) => (n === 1 ? "1 dată" : `${n} ori`),
+    },
+    // Student profile: three stat cards + a point-timeline chart + the full event history.
+    profile: {
+      lifetime: "Total câștigat",
+      lifetimeHint: "din toate timpurile",
+      spendable: "Disponibil acum",
+      spendableHint: "de cheltuit",
+      thisMonth: "Luna aceasta",
+      thisMonthHint: "net",
+      timelineTitle: "Evoluția punctelor",
+      timelineSubtitle: "luna aceasta",
+      timelineEmpty: "Nicio activitate luna aceasta.",
+      balanceLabel: "Sold",
+      historyTitle: "Istoric complet",
+      historyEmpty: "Nicio tranzacție încă.",
+      loadMore: "Încarcă mai multe",
+      loadingMore: "Se încarcă…",
+      historyCount: (shown: number, total: number) => `${shown} din ${total}`,
+      voided: "Anulat",
+      types: {
+        Award: "Recompensă",
+        Deduction: "Penalizare",
+        Purchase: "Cumpărare din magazin",
+        Adjustment: "Ajustare manuală",
+      },
+    },
+  },
+
   common: {
     loading: "Se încarcă…",
     retry: "Reîncearcă",

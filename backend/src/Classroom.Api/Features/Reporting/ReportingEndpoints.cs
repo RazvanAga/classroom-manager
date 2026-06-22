@@ -17,6 +17,11 @@ public static class ReportingEndpoints
     // ±14h covers every real-world offset; clamp the (untrusted) client value rather than trust it.
     private const int MaxOffsetMinutes = 14 * 60;
 
+    // Page size bounds for the per-student history — a modest default with a cap so a hostile
+    // page-size can't drag the whole ledger into memory.
+    private const int DefaultPageSize = 20;
+    private const int MaxPageSize = 100;
+
     public static IEndpointRouteBuilder MapReportingEndpoints(this IEndpointRouteBuilder app)
     {
         // Read-only teacher analytics, scoped to a class the teacher must be a member of. Kiosk
@@ -31,7 +36,69 @@ public static class ReportingEndpoints
         group.MapGet("/behaviors", BehaviorBreakdownAsync)
             .WithSummary("A per-class behavior breakdown (counts + point totals) over a date range.");
 
+        group.MapGet("/students/{studentId:guid}/history", StudentHistoryAsync)
+            .WithSummary("A student's paginated point transaction history including notes (most recent first).");
+
         return app;
+    }
+
+    private static async Task<IResult> StudentHistoryAsync(
+        Guid classId,
+        Guid studentId,
+        ClaimsPrincipal user,
+        ClassroomDbContext db,
+        IAuthorizationService authz,
+        int page = 1,
+        int pageSize = DefaultPageSize)
+    {
+        if (!await IsMember(authz, user, classId))
+        {
+            return Forbidden();
+        }
+
+        var student = await db.Students
+            .Where(s => s.Id == studentId && s.ClassId == classId)
+            .Select(s => new { s.Id, s.DisplayName })
+            .FirstOrDefaultAsync();
+        if (student is null)
+        {
+            return Results.Problem(
+                title: "Student not found",
+                detail: "No such student exists in this class.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
+
+        // Show every row — voided included — so the profile's history is a complete audit trail; only
+        // the timeline/breakdown aggregations drop voided rows. The behavior name is left-joined for
+        // display, and the note (Reason) rides along so a teacher can see *why* points were given.
+        var totalCount = await db.PointTransactions.CountAsync(t => t.StudentId == studentId);
+
+        var items = await (
+                from t in db.PointTransactions
+                join b in db.Behaviors on t.BehaviorId equals b.Id into behaviorJoin
+                from b in behaviorJoin.DefaultIfEmpty()
+                where t.StudentId == studentId
+                // GUID v7 ids are time-ordered, so they break ties within a bulk award deterministically.
+                orderby t.CreatedAt descending, t.Id descending
+                select new StudentHistoryItem(
+                    t.Id,
+                    t.Amount,
+                    t.Type,
+                    t.BehaviorId,
+                    b != null ? b.Name : null,
+                    t.Reason,
+                    t.CreatedAt,
+                    t.VoidedAt))
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        return Results.Ok(new StudentHistoryResponse(
+            student.Id, student.DisplayName, page, pageSize, totalCount, totalPages, items));
     }
 
     private static async Task<IResult> StudentTimelineAsync(
